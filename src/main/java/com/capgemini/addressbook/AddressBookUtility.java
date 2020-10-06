@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class AddressBookUtilityUC10 {
+public class AddressBookUtility {
 
 	public static void main(String[] args) {
 

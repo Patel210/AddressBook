@@ -98,6 +98,6 @@ public class Contact {
 		}
 		Contact contact = (Contact) obj;
 		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
-
+		
 	}
 }

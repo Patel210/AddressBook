@@ -29,7 +29,8 @@ public class AddressBookMain {
 	/**
 	 * To add contact to the address book
 	 */
-	public void addAddressBook(String addressBookName, List<Contact> addressBook) {
+	public void addAddressBook(String addressBookName) {
+		List<Contact> addressBook = new LinkedList<Contact>();
 		addressBooks.put(addressBookName, addressBook);
 		System.out.println("Address Book added Successfully!");
 	}
@@ -46,7 +47,8 @@ public class AddressBookMain {
 	/**
 	 * To add contact in particular address book
 	 */
-	public void addContactToParticularAddressBook(String addressBookName, Contact contact) {
+	public void addContactToParticularAddressBook(String addressBookName) {
+		Contact contact = createContact();
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
 
 		Predicate<Contact> predicate = contactObj -> contactObj.equals(contact);
@@ -64,9 +66,8 @@ public class AddressBookMain {
 					"Address Book by that Name does not exist! Do you want to create new addressbook by this name? (Y/N");
 			String option = SC.next();
 			if (option.equalsIgnoreCase("y")) {
-				List<Contact> addressBook = new LinkedList<Contact>();
-				addressBook.add(contact);
-				addAddressBook(addressBookName, addressBook);
+				addAddressBook(addressBookName);
+				addressBooks.get(addressBookName).add(contact);
 			}
 		}
 	}
@@ -257,24 +258,34 @@ public class AddressBookMain {
 													 .collect(Collectors.toList());
 		return states;
 	}
+	
+	/**
+	 * To get contact count by city
+	 */
+	public Map<String, Integer> contactCountByCity() {
+		Map<String, Integer> countByCities = new HashMap<String, Integer>();
+		
+		Function<String, Integer> countByCity =  str -> (Integer) listOfContactsInParticularCity(str).size();
+		
+		
+		
+		listOfAllCities().stream().forEach(str -> countByCities.put(str, countByCity.apply(str)));
 
-	public static void main(String[] args) {
-
-		AddressBookMain addressBookMain = new AddressBookMain();
-		System.out.println("Enter the number of address book you want in the system: ");
-		int noOfAddressBooks = SC.nextInt();
-
-		for (int i = 0; i < noOfAddressBooks; i++) {
-			List<Contact> addressBook = new LinkedList<Contact>();
-			System.out.println("Number of contacts to add in this addressbook : ");
-			int noOfContacts = SC.nextInt();
-			for (int j = 0; j < noOfContacts; j++) {
-				addressBook.add(addressBookMain.createContact());
-			}
-			System.out.println("Enter the address book name:");
-			String addressBookName = SC.next();
-			addressBookMain.addAddressBook(addressBookName, addressBook);
-			System.out.println(addressBooks);
-		}
+		return countByCities;
+	}
+	
+	/**
+	 * To get contact count by city
+	 */
+	public Map<String, Integer> contactCountByState() {
+		Map<String, Integer> countByStates = new HashMap<String, Integer>();
+		
+		
+		Function<String, Integer> countByState =  str -> listOfContactsInParticularState(str).size();	
+		
+		
+		listOfAllStates().stream().forEach(str -> countByStates.put(str, countByState.apply(str)));
+		
+		return countByStates;
 	}
 }

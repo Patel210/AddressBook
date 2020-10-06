@@ -88,4 +88,16 @@ public class Contact {
 		this.phoneNumber = phoneNumber;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof Contact)) {
+			return false;
+		}
+		Contact contact = (Contact) obj;
+		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
+
+	}
 }

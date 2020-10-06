@@ -270,6 +270,9 @@ public class AddressBookMain {
 		return countByStates;
 	}
 
+	/**
+	 * To sort the entries in the address book by person's name
+	 */
 	public void sortAddressBookByPersonName(String addressBook) {
 
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
@@ -283,6 +286,72 @@ public class AddressBookMain {
 
 				addressBooks.replace(addressBook, sortedAddressBook);
 				System.out.println(addressBooks);
+			}
+		} else {
+			System.out.println("There is no address book by this name in the address books");
+		}
+	}
+
+	/**
+	 * To sort the entries in the address book by city
+	 */
+	public void sortAddressBookByCity(String addressBook) {
+
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
+		if (isAddressBookByThatNameExists) {
+			if (addressBooks.get(addressBook).size() == 0) {
+				System.out.println("Sorry! There is no contact in this address book to sort!");
+			} else {
+				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
+						.sorted(Comparator.comparing(Contact::getCity))
+						.collect(Collectors.toCollection(LinkedList::new));
+
+				addressBooks.replace(addressBook, sortedAddressBook);
+				System.out.println(addressBooks.get(addressBook));
+			}
+		} else {
+			System.out.println("There is no address book by this name in the address books");
+		}
+	}
+
+	/**
+	 * To sort the entries in the address book by state
+	 */
+	public void sortAddressBookByState(String addressBook) {
+
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
+		if (isAddressBookByThatNameExists) {
+			if (addressBooks.get(addressBook).size() == 0) {
+				System.out.println("Sorry! There is no contact in this address book to sort!");
+			} else {
+				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
+						.sorted(Comparator.comparing(Contact::getState))
+						.collect(Collectors.toCollection(LinkedList::new));
+
+				addressBooks.replace(addressBook, sortedAddressBook);
+				System.out.println(addressBooks.get(addressBook));
+			}
+		} else {
+			System.out.println("There is no address book by this name in the address books");
+		}
+	}
+
+	/**
+	 * To sort the entries in the address book by zip
+	 */
+	public void sortAddressBookByZip(String addressBook) {
+
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
+		if (isAddressBookByThatNameExists) {
+			if (addressBooks.get(addressBook).size() == 0) {
+				System.out.println("Sorry! There is no contact in this address book to sort!");
+			} else {
+				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
+						.sorted(Comparator.comparing(Contact::getZip))
+						.collect(Collectors.toCollection(LinkedList::new));
+
+				addressBooks.replace(addressBook, sortedAddressBook);
+				System.out.println(addressBooks.get(addressBook));
 			}
 		} else {
 			System.out.println("There is no address book by this name in the address books");

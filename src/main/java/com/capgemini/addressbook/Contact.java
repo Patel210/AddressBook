@@ -90,14 +90,15 @@ public class Contact {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == this) {
+		if(obj == this) {
 			return true;
 		}
-		if (!(obj instanceof Contact)) {
+		if(!(obj instanceof Contact)) {
 			return false;
 		}
 		Contact contact = (Contact) obj;
-		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
+		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName()) ;
+
 		
 	}
 }

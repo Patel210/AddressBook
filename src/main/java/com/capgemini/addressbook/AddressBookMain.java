@@ -5,8 +5,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+
+
+@FunctionalInterface
+interface AddingKVpair{
+	void addKVPair(String key, LinkedList<Contact> value);
+}
 
 
 public class AddressBookMain {
@@ -192,6 +200,62 @@ public class AddressBookMain {
 
 		return contactInParticularCity;
 
+	}
+	
+	/**
+	 * To get contacts by city
+	 */
+	public Map<String, LinkedList<Contact>> addressBookByCity() {
+		Map<String, LinkedList<Contact>> contactByCities = new HashMap<String,LinkedList<Contact>>();
+		
+		Function<String, LinkedList<Contact>> cityToContactsInThatCity = str -> 
+																(LinkedList<Contact>)listOfContactsInParticularCity(str);
+		AddingKVpair addingKVPair = (x, y)  -> contactByCities.put(x, y);
+		listOfAllCities().forEach(str -> addingKVPair.addKVPair(str, cityToContactsInThatCity.apply(str)));
+
+
+		return contactByCities;
+	}
+	
+	/**
+	 * To get contacts by state
+	 */
+	public Map<String, LinkedList<Contact>> addressBookByState() {
+		Map<String, LinkedList<Contact>> contactByStates = new HashMap<String,LinkedList<Contact>>();
+		
+		Function<String, LinkedList<Contact>> stateToContactsInThatState = str -> 
+																(LinkedList<Contact>)listOfContactsInParticularState(str);
+		AddingKVpair addingKVPair = (x, y)  -> contactByStates.put(x, y);
+		listOfAllCities().forEach(str -> addingKVPair.addKVPair(str, stateToContactsInThatState.apply(str)));
+		
+		return contactByStates;
+	}
+	
+	/**
+	 * To get the list of city based on all contacts in tha address books
+	 */
+	public List<String> listOfAllCities(){
+		Function<Contact, String> togetCityValue = contact -> contact.getCity();
+		
+		List<String> cities = addressBooks.entrySet().stream()
+													 .flatMap(entry -> entry.getValue().stream())
+													 .map(togetCityValue)
+													 .collect(Collectors.toList());
+		return cities;
+	}
+	
+	/**
+	 * To get the list of state based on all contacts in tha address books
+	 */
+	public List<String> listOfAllStates(){
+		
+		Function<Contact, String> togetStateValue = contact -> contact.getState();
+		
+		List<String> states = addressBooks.entrySet().stream()
+													 .flatMap(entry -> entry.getValue().stream())
+													 .map(togetStateValue)
+													 .collect(Collectors.toList());
+		return states;
 	}
 
 	public static void main(String[] args) {

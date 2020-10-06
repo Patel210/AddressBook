@@ -1,34 +1,24 @@
 package com.capgemini.addressbook;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class AddressBookMain {
 
-	private Contact[] addressBook;
-	private int noOfContacts = 0;
+	private static List<Contact> addressBook = new ArrayList<Contact>();
 	private static final Scanner SC = new Scanner(System.in);
 
 	public AddressBookMain() {
 		super();
-		addressBook = new Contact[50];
-	}
-
-	public Contact[] getContacts() {
-		return addressBook;
-	}
-
-	public void setContacts(Contact[] contacts) {
-		this.addressBook = contacts;
 	}
 
 	/**
 	 * To add contact to the address book
 	 */
-	public void addContact(String firstName, String lastName, String address, String city, String state, String email,
-			long zip, long phoneNumber) {
-		addressBook[noOfContacts] = new Contact(firstName, lastName, address, city, state, email, zip, phoneNumber);
-		System.out.println("Contact added successfully!");
-		noOfContacts++;
+	public void addContact(Contact contact) {
+		addressBook.add(contact);
+		System.out.println("Contact added Successfully!");
 	}
 
 	/**
@@ -36,10 +26,10 @@ public class AddressBookMain {
 	 */
 	public Contact getContact(String firstName, String lastName) {
 		Contact contact = null;
-		for (int i = 0; i < noOfContacts; i++) {
-			if (addressBook[i].getFirstName().equalsIgnoreCase(firstName)
-					&& addressBook[i].getLastName().equalsIgnoreCase(lastName)) {
-				contact = addressBook[i];
+		for (Contact contactObject : addressBook) {
+			if (contactObject.getFirstName().equalsIgnoreCase(firstName)
+					&& contactObject.getLastName().equalsIgnoreCase(lastName)) {
+				contact = contactObject;
 				break;
 			}
 		}
@@ -86,14 +76,7 @@ public class AddressBookMain {
 		System.out.println(contact);
 
 		if (contact != null) {
-			Contact[] copyOfAddressBook = new Contact[addressBook.length];
-			for (int i = 0; i < addressBook.length; i++) {
-				if (addressBook[i] != (contact)) {
-					copyOfAddressBook[i] = addressBook[i];
-				}
-			}
-
-			addressBook = copyOfAddressBook;
+			addressBook.remove(contact);
 			System.out.println("Contact removed from the address book successfully");
 		} else {
 			System.out.println("Sorry, no such contact exist with that name!");
@@ -103,13 +86,35 @@ public class AddressBookMain {
 	public static void main(String[] args) {
 
 		AddressBookMain addressBookMain = new AddressBookMain();
-		addressBookMain.addContact("Tom", "Harry", "14, Brooklyn Heights", "New York City", "New York",
-				"tom.harry@yahoo.com", 11208, 1002359753);
-		addressBookMain.addContact("Peter", "Clark", "18, Brooklyn Heights", "New York City", "New York",
-				"peter.clark@yahoo.com", 11208, 1002359896);
 
-		addressBookMain.editContact("Tom", "Harry");
-		addressBookMain.removeContact("Peter", "Clark");
+		System.out.println("Enter the number of contacts you add into the address book: ");
+		int numberOfContacts = SC.nextInt();
+
+		for (int i = 0; i < numberOfContacts; i++) {
+			System.out.println("Enter the contact details \nfirst name:");
+			String firstName = SC.next();
+			System.out.println("last name:");
+			String lastName = SC.next();
+			SC.nextLine();
+			System.out.println("Address: ");
+			String address = SC.nextLine();
+			System.out.println("City: ");
+			String city = SC.nextLine();
+			System.out.println("State: ");
+			String state = SC.nextLine();
+			System.out.println("Zip: ");
+			long zip = SC.nextLong();
+			System.out.println("Phone Number: ");
+			long phoneNumber = SC.nextLong();
+			System.out.println("Email Address: ");
+			String email = SC.next();
+
+			Contact contact = new Contact(firstName, lastName, address, city, state, email, zip, phoneNumber);
+			System.out.println(contact);
+			addressBookMain.addContact(contact);
+		}
+
+		System.out.println(addressBook);
 
 	}
 

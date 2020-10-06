@@ -1,5 +1,7 @@
 package com.capgemini.addressbook;
 
+import java.util.Scanner;
+
 public class AddressBookMain {
 
 	private Contact[] addressBook;
@@ -7,7 +9,7 @@ public class AddressBookMain {
 
 	public AddressBookMain() {
 		super();
-		addressBook = new Contact[5];
+		addressBook = new Contact[50];
 	}
 
 	public Contact[] getContacts() {
@@ -27,7 +29,32 @@ public class AddressBookMain {
 
 	public static void main(String[] args) {
 		AddressBookMain addressBookMain = new AddressBookMain();
-		addressBookMain.addContact("Tom", "Harry", "14, Brooklyn Heights", "New York City", "New York",
-				"tom.harry@yahoo.com", 11208, 1002359753);
+
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Enter the number of contacts you add into the address book (Max limit is 50): ");
+		int numberOfContacts = sc.nextInt();
+		for (int i = 0; i < numberOfContacts; i++) {
+			System.out.println("Enter the contact details \nfirst name:");
+			String firstName = sc.next();
+			System.out.println("last name:");
+			String lastName = sc.next();
+			System.out.println("Address: ");
+			sc.nextLine();
+			String address = sc.nextLine();
+			System.out.println("City: ");
+			String city = sc.nextLine();
+			System.out.println("State: ");
+			String state = sc.nextLine();
+			System.out.println("Zip: ");
+			long zip = sc.nextLong();
+			System.out.println("Phone Number: ");
+			long phoneNumber = sc.nextLong();
+			System.out.println("Email Address: ");
+			String email = sc.next();
+			sc.close();
+			addressBookMain.addContact(firstName, lastName, address, city, state, email, zip, phoneNumber);
+
+		}
+
 	}
 }

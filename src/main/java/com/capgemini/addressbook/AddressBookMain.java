@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.function.Predicate;
 
 public class AddressBookMain {
 
@@ -24,17 +25,31 @@ public class AddressBookMain {
 	}
 
 	/**
+	 * To check if Address book by particular name exists or not
+	 */
+	public boolean isAddressBookByThatNameExists(String addressBookName) {
+		boolean isAddressBookByThatNameExistsboolean = addressBooks.entrySet().stream()
+				.filter(a -> a.getKey().equalsIgnoreCase(addressBookName)).findAny() != null;
+		return isAddressBookByThatNameExistsboolean;
+	}
+
+	/**
 	 * To add contact in particular address book
 	 */
 	public void addContactToParticularAddressBook(String addressBookName, Contact contact) {
-		boolean isAddressBookByThatNameExists = false;
-		for (Map.Entry<String, List<Contact>> entry : addressBooks.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(addressBookName)) {
-				entry.getValue().add(contact);
-				isAddressBookByThatNameExists = true;
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
+
+		Predicate<Contact> predicate = contactObj -> contactObj.equals(contact);
+
+		if (isAddressBookByThatNameExists) {
+			boolean isSame = addressBooks.get(addressBookName).stream().anyMatch(predicate);
+			if (!isSame) {
+				addressBooks.get(addressBookName).add(contact);
+				System.out.println("Contact added successfully!");
+			} else {
+				System.out.println("Contact by that name already exists in the particular address book! Try again!");
 			}
-		}
-		if (!isAddressBookByThatNameExists) {
+		} else {
 			System.out.println(
 					"Address Book by that Name does not exist! Do you want to create new addressbook by this name? (Y/N");
 			String option = SC.next();
@@ -80,7 +95,6 @@ public class AddressBookMain {
 	 */
 	public Contact getContact(String firstName, String lastName) {
 		Contact contact = null;
-
 		for (Map.Entry<String, List<Contact>> entry : addressBooks.entrySet()) {
 			for (Contact contactObject : entry.getValue()) {
 				if (contactObject.getFirstName().equalsIgnoreCase(firstName)

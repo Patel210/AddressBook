@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 
 public class AddressBookMain {
 
@@ -158,6 +160,38 @@ public class AddressBookMain {
 		if (!flag) {
 			System.out.println("Sorry, no such contact exist with that name!");
 		}
+	}
+
+	/**
+	 * To get the list of contacts in particular state
+	 */
+	public List<Contact> listOfContactsInParticularState(String state) {
+
+		List<Contact> contactInParticularState = addressBooks.entrySet().stream()
+				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getState().equals(state))
+				.collect(Collectors.toList());
+
+		if (contactInParticularState.size() == 0) {
+			System.out.println("No contact exist in particular state");
+		}
+		return contactInParticularState;
+
+	}
+	
+	/**
+	 * To get the list of contacts in particular city
+	 */
+	public List<Contact> listOfContactsInParticularCity(String city) {
+		List<Contact> contactInParticularCity = addressBooks.entrySet().stream()
+				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getCity().equals(city))
+				.collect(Collectors.toList());
+
+		if (contactInParticularCity.size() == 0) {
+			System.out.println("No contact exist in particular city");
+		}
+
+		return contactInParticularCity;
+
 	}
 
 	public static void main(String[] args) {

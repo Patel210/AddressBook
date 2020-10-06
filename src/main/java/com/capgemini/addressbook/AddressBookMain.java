@@ -1,5 +1,6 @@
 package com.capgemini.addressbook;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,13 +10,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-
-
 @FunctionalInterface
-interface AddingKVpair{
+interface AddingKVpair {
 	void addKVPair(String key, LinkedList<Contact> value);
 }
-
 
 public class AddressBookMain {
 
@@ -39,9 +37,9 @@ public class AddressBookMain {
 	 * To check if Address book by particular name exists or not
 	 */
 	public boolean isAddressBookByThatNameExists(String addressBookName) {
-		boolean isAddressBookByThatNameExistsboolean = addressBooks.entrySet().stream()
-				.filter(a -> a.getKey().equalsIgnoreCase(addressBookName)).findAny() != null;
-		return isAddressBookByThatNameExistsboolean;
+		int count = (int) addressBooks.entrySet().stream().filter(a -> a.getKey().equalsIgnoreCase(addressBookName))
+				.count();
+		return (count == 1) ? true : false;
 	}
 
 	/**
@@ -176,9 +174,9 @@ public class AddressBookMain {
 	 */
 	public List<Contact> listOfContactsInParticularState(String state) {
 
-		List<Contact> contactInParticularState = addressBooks.entrySet().stream()
+		LinkedList<Contact> contactInParticularState = (LinkedList<Contact>) addressBooks.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getState().equals(state))
-				.collect(Collectors.toList());
+				.collect(Collectors.toCollection(LinkedList::new));
 
 		if (contactInParticularState.size() == 0) {
 			System.out.println("No contact exist in particular state");
@@ -186,14 +184,15 @@ public class AddressBookMain {
 		return contactInParticularState;
 
 	}
-	
+
 	/**
 	 * To get the list of contacts in particular city
 	 */
 	public List<Contact> listOfContactsInParticularCity(String city) {
-		List<Contact> contactInParticularCity = addressBooks.entrySet().stream()
+
+		LinkedList<Contact> contactInParticularCity = (LinkedList<Contact>) addressBooks.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getCity().equals(city))
-				.collect(Collectors.toList());
+				.collect(Collectors.toCollection(LinkedList::new));
 
 		if (contactInParticularCity.size() == 0) {
 			System.out.println("No contact exist in particular city");
@@ -202,90 +201,91 @@ public class AddressBookMain {
 		return contactInParticularCity;
 
 	}
-	
+
 	/**
 	 * To get contacts by city
 	 */
 	public Map<String, LinkedList<Contact>> addressBookByCity() {
-		Map<String, LinkedList<Contact>> contactByCities = new HashMap<String,LinkedList<Contact>>();
-		
-		Function<String, LinkedList<Contact>> cityToContactsInThatCity = str -> 
-																(LinkedList<Contact>)listOfContactsInParticularCity(str);
-		AddingKVpair addingKVPair = (x, y)  -> contactByCities.put(x, y);
+		Map<String, LinkedList<Contact>> contactByCities = new HashMap<String, LinkedList<Contact>>();
+		Function<String, LinkedList<Contact>> cityToContactsInThatCity = str -> (LinkedList<Contact>) listOfContactsInParticularCity(
+				str);
+		AddingKVpair addingKVPair = (x, y) -> contactByCities.put(x, y);
 		listOfAllCities().forEach(str -> addingKVPair.addKVPair(str, cityToContactsInThatCity.apply(str)));
-
 
 		return contactByCities;
 	}
-	
+
 	/**
 	 * To get contacts by state
 	 */
 	public Map<String, LinkedList<Contact>> addressBookByState() {
-		Map<String, LinkedList<Contact>> contactByStates = new HashMap<String,LinkedList<Contact>>();
-		
-		Function<String, LinkedList<Contact>> stateToContactsInThatState = str -> 
-																(LinkedList<Contact>)listOfContactsInParticularState(str);
-		AddingKVpair addingKVPair = (x, y)  -> contactByStates.put(x, y);
+		Map<String, LinkedList<Contact>> contactByStates = new HashMap<String, LinkedList<Contact>>();
+		Function<String, LinkedList<Contact>> stateToContactsInThatState = str -> (LinkedList<Contact>) listOfContactsInParticularState(
+				str);
+		AddingKVpair addingKVPair = (x, y) -> contactByStates.put(x, y);
 		listOfAllCities().forEach(str -> addingKVPair.addKVPair(str, stateToContactsInThatState.apply(str)));
-		
+
 		return contactByStates;
 	}
-	
+
 	/**
 	 * To get the list of city based on all contacts in tha address books
 	 */
-	public List<String> listOfAllCities(){
+	public List<String> listOfAllCities() {
 		Function<Contact, String> togetCityValue = contact -> contact.getCity();
-		
-		List<String> cities = addressBooks.entrySet().stream()
-													 .flatMap(entry -> entry.getValue().stream())
-													 .map(togetCityValue)
-													 .collect(Collectors.toList());
+		List<String> cities = addressBooks.entrySet().stream().flatMap(entry -> entry.getValue().stream())
+				.map(togetCityValue).collect(Collectors.toList());
 		return cities;
 	}
-	
+
 	/**
 	 * To get the list of state based on all contacts in tha address books
 	 */
-	public List<String> listOfAllStates(){
-		
+	public List<String> listOfAllStates() {
 		Function<Contact, String> togetStateValue = contact -> contact.getState();
-		
-		List<String> states = addressBooks.entrySet().stream()
-													 .flatMap(entry -> entry.getValue().stream())
-													 .map(togetStateValue)
-													 .collect(Collectors.toList());
+		List<String> states = addressBooks.entrySet().stream().flatMap(entry -> entry.getValue().stream())
+				.map(togetStateValue).collect(Collectors.toList());
 		return states;
 	}
-	
+
 	/**
 	 * To get contact count by city
 	 */
 	public Map<String, Integer> contactCountByCity() {
 		Map<String, Integer> countByCities = new HashMap<String, Integer>();
-		
-		Function<String, Integer> countByCity =  str -> (Integer) listOfContactsInParticularCity(str).size();
-		
-		
-		
+		Function<String, Integer> countByCity = str -> (Integer) listOfContactsInParticularCity(str).size();
 		listOfAllCities().stream().forEach(str -> countByCities.put(str, countByCity.apply(str)));
 
 		return countByCities;
 	}
-	
+
 	/**
 	 * To get contact count by city
 	 */
 	public Map<String, Integer> contactCountByState() {
 		Map<String, Integer> countByStates = new HashMap<String, Integer>();
-		
-		
-		Function<String, Integer> countByState =  str -> listOfContactsInParticularState(str).size();	
-		
-		
+		Function<String, Integer> countByState = str -> listOfContactsInParticularState(str).size();
 		listOfAllStates().stream().forEach(str -> countByStates.put(str, countByState.apply(str)));
-		
+
 		return countByStates;
+	}
+
+	public void sortAddressBookByPersonName(String addressBook) {
+
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
+		if (isAddressBookByThatNameExists) {
+			if (addressBooks.get(addressBook).size() == 0) {
+				System.out.println("Sorry! There is no contact in this address book to sort!");
+			} else {
+				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
+						.sorted(Comparator.comparing(Contact::getFirstName))
+						.collect(Collectors.toCollection(LinkedList::new));
+
+				addressBooks.replace(addressBook, sortedAddressBook);
+				System.out.println(addressBooks);
+			}
+		} else {
+			System.out.println("There is no address book by this name in the address books");
+		}
 	}
 }

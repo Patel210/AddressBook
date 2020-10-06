@@ -7,18 +7,18 @@ import java.util.Scanner;
 
 public class AddressBookUtilityUC10 {
 
-public static void main(String[] args) {
-		
+	public static void main(String[] args) {
+
 		AddressBookMain addressBookMain = new AddressBookMain();
 		Scanner sc = new Scanner(System.in);
 		int choice;
 		do {
 			System.out.println("1. create new address book\n2. add contact to a particular address book\n3."
 					+ " get contacts by city\n4. get a list of all contact in particular city\n5. get a count of contacts by city"
-					+ "\n6. Exit ");
+					+ "\n6. sort the address book by name\n7. Exit ");
 
 			choice = sc.nextInt();
-			switch(choice) {
+			switch (choice) {
 			case 1:
 				System.out.println("Enter the address book name: ");
 				addressBookMain.addAddressBook(sc.next());
@@ -37,13 +37,16 @@ public static void main(String[] args) {
 				listOfContacts.stream().forEach(System.out::println);
 				break;
 			case 5:
-				Map<String, Integer>  countByCity = addressBookMain.contactCountByCity();
+				Map<String, Integer> countByCity = addressBookMain.contactCountByCity();
 				System.out.println(countByCity);
 				break;
+			case 6:
+				System.out.println("Enter the name of address book you want to sort: ");
+				addressBookMain.sortAddressBookByPersonName(sc.next());
+				break;
 			}
-			
-		}
-		while(choice != 6);
+
+		} while (choice != 7);
 		sc.close();
 	}
 }

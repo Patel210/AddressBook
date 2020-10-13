@@ -16,7 +16,7 @@ public class AddressBookUtility {
 			System.out.println("1. create new address book\n2. add contact to a particular address book\n3."
 					+ " get contacts by city\n4. get contacts by state\n5. get a list of all contact in particular city\n6. get a count of contacts by city"
 					+ "\n7. sort the address book by name\n8. sort the address book by city\n9. sort the address book by state"
-					+ "\n10. sort the address book by zip\n11. Exit");
+					+ "\n10. sort the address book by zip\n11. write address book to file\n12. read contacts from a file\n13. Exit");
 
 			choice = sc.nextInt();
 			switch (choice) {
@@ -61,9 +61,19 @@ public class AddressBookUtility {
 				System.out.println("Enter the name of address book you want to sort: ");
 				addressBookMain.sortAddressBookByZip(sc.next());
 				break;
+			case 11:
+				System.out.println("Enter the name of the address book you want to write in a file:");
+				addressBookMain.writeAddressBookToFile(sc.next());
+				break;
+			case 12:
+				System.out.println("Enter the file name:");
+				String fileName = sc.next();
+				System.out.println("Enter the address book where you want to store the contacts");
+				addressBookMain.readContactsFromAFile(fileName, sc.next());
+				break;
 			}
 
-		} while (choice != 11);
+		} while (choice != 13);
 
 		sc.close();
 	}

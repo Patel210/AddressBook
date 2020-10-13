@@ -1,5 +1,13 @@
 package com.capgemini.addressbook;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -355,6 +363,36 @@ public class AddressBookMain {
 			}
 		} else {
 			System.out.println("There is no address book by this name in the address books");
+		}
+	}
+
+	/*
+	 * Writes the address book in a file
+	 */
+	public void writeAddressBookToFile(String addressBookName) {
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
+		if (isAddressBookByThatNameExists) {
+			new AddressBookFileIO().writeAddressBookToFile(addressBookName,
+					(LinkedList<Contact>) addressBooks.get(addressBookName));
+		} else {
+			System.out.println("Please enter the correct address book name!");
+		}
+	}
+
+	/**
+	 * Reads the file and adds contacts to the particular address book
+	 */
+	public void readContactsFromAFile(String fileName, String addressBookName) {
+		File file = new File(fileName);
+		if (!isAddressBookByThatNameExists(addressBookName)) {
+			addAddressBook(addressBookName);
+			addressBooks.put(addressBookName, new AddressBookFileIO().readContactsToAddressBooks(file));
+		} else {
+			System.out.println(
+					"Address Book by that already exists! Do you want to overwrite the content of the address books (Y/N)?");
+			if ('Y' == (SC.next().charAt(0))) {
+				addressBooks.put(addressBookName, new AddressBookFileIO().readContactsToAddressBooks(file));
+			}
 		}
 	}
 }

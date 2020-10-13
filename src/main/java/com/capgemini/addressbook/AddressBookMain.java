@@ -1,13 +1,6 @@
 package com.capgemini.addressbook;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.ParseException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -18,12 +11,19 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+
 @FunctionalInterface
 interface AddingKVpair {
 	void addKVPair(String key, LinkedList<Contact> value);
 }
 
 public class AddressBookMain {
+
+	enum IOTYPE {
+		CONSOLE, TXT_FILE, CSV_FILE
+	}
 
 	private static Map<String, List<Contact>> addressBooks = new HashMap<String, List<Contact>>();
 	private static final Scanner SC = new Scanner(System.in);
@@ -53,12 +53,9 @@ public class AddressBookMain {
 	/**
 	 * To add contact in particular address book
 	 */
-	public void addContactToParticularAddressBook(String addressBookName) {
-		Contact contact = createContact();
+	public void addContactToParticularAddressBook(String addressBookName, Contact contact) {
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
-
 		Predicate<Contact> predicate = contactObj -> contactObj.equals(contact);
-
 		if (isAddressBookByThatNameExists) {
 			boolean isSame = addressBooks.get(addressBookName).stream().anyMatch(predicate);
 			if (!isSame) {
@@ -82,7 +79,6 @@ public class AddressBookMain {
 	 * To create Contact
 	 */
 	public Contact createContact() {
-
 		System.out.println("Enter the details to add the contact \nfirst name:");
 		String firstName = SC.next();
 		System.out.println("last name:");
@@ -100,9 +96,7 @@ public class AddressBookMain {
 		long phoneNumber = SC.nextLong();
 		System.out.println("Email Address: ");
 		String email = SC.next();
-
 		Contact contactObject = new Contact(firstName, lastName, address, city, state, email, zip, phoneNumber);
-
 		return contactObject;
 
 	}
@@ -141,13 +135,13 @@ public class AddressBookMain {
 			System.out.println("City: ");
 			contact.setCity(SC.nextLine());
 			System.out.println("State: ");
-			contact.setState(SC.next());
+			contact.setState(SC.nextLine());
 			System.out.println("Zip: ");
 			contact.setZip(SC.nextLong());
 			System.out.println("Phone Number: ");
 			contact.setPhoneNumber(SC.nextLong());
 			System.out.println("Email Address: ");
-			contact.setEmail(SC.next());
+			contact.setEmail(SC.nextLine());
 			System.out.println("Contact Updated Successfully!");
 		}
 
@@ -177,11 +171,22 @@ public class AddressBookMain {
 		}
 	}
 
+	public void viewAddressBook(String addressBookName) {
+		if (isAddressBookByThatNameExists(addressBookName)) {
+			if (addressBooks.get(addressBookName).size() == 0) {
+				System.out.println("Sorry! No contact present in this address Book");
+			} else {
+				addressBooks.get(addressBookName).forEach(System.out::println);
+			}
+		} else {
+			System.out.println("Sorry! No address book by this name present in the system");
+		}
+	}
+
 	/**
 	 * To get the list of contacts in particular state
 	 */
 	public List<Contact> listOfContactsInParticularState(String state) {
-
 		LinkedList<Contact> contactInParticularState = (LinkedList<Contact>) addressBooks.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getState().equals(state))
 				.collect(Collectors.toCollection(LinkedList::new));
@@ -190,14 +195,12 @@ public class AddressBookMain {
 			System.out.println("No contact exist in particular state");
 		}
 		return contactInParticularState;
-
 	}
 
 	/**
 	 * To get the list of contacts in particular city
 	 */
 	public List<Contact> listOfContactsInParticularCity(String city) {
-
 		LinkedList<Contact> contactInParticularCity = (LinkedList<Contact>) addressBooks.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getCity().equals(city))
 				.collect(Collectors.toCollection(LinkedList::new));
@@ -205,9 +208,7 @@ public class AddressBookMain {
 		if (contactInParticularCity.size() == 0) {
 			System.out.println("No contact exist in particular city");
 		}
-
 		return contactInParticularCity;
-
 	}
 
 	/**
@@ -231,7 +232,7 @@ public class AddressBookMain {
 		Function<String, LinkedList<Contact>> stateToContactsInThatState = str -> (LinkedList<Contact>) listOfContactsInParticularState(
 				str);
 		AddingKVpair addingKVPair = (x, y) -> contactByStates.put(x, y);
-		listOfAllCities().forEach(str -> addingKVPair.addKVPair(str, stateToContactsInThatState.apply(str)));
+		listOfAllStates().forEach(str -> addingKVPair.addKVPair(str, stateToContactsInThatState.apply(str)));
 
 		return contactByStates;
 	}
@@ -304,7 +305,6 @@ public class AddressBookMain {
 	 * To sort the entries in the address book by city
 	 */
 	public void sortAddressBookByCity(String addressBook) {
-
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
 		if (isAddressBookByThatNameExists) {
 			if (addressBooks.get(addressBook).size() == 0) {
@@ -326,7 +326,6 @@ public class AddressBookMain {
 	 * To sort the entries in the address book by state
 	 */
 	public void sortAddressBookByState(String addressBook) {
-
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
 		if (isAddressBookByThatNameExists) {
 			if (addressBooks.get(addressBook).size() == 0) {
@@ -348,7 +347,6 @@ public class AddressBookMain {
 	 * To sort the entries in the address book by zip
 	 */
 	public void sortAddressBookByZip(String addressBook) {
-
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
 		if (isAddressBookByThatNameExists) {
 			if (addressBooks.get(addressBook).size() == 0) {
@@ -369,11 +367,19 @@ public class AddressBookMain {
 	/*
 	 * Writes the address book in a file
 	 */
-	public void writeAddressBookToFile(String addressBookName) {
-		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
-		if (isAddressBookByThatNameExists) {
-			new AddressBookFileIO().writeAddressBookToFile(addressBookName,
-					(LinkedList<Contact>) addressBooks.get(addressBookName));
+	public void writeAddressBook(String addressBookName, IOTYPE ioType) {
+		if (isAddressBookByThatNameExists(addressBookName)) {
+			if (ioType.equals(IOTYPE.TXT_FILE)) {
+				new AddressBookFileIO().writeTextFile(addressBookName,
+						(LinkedList<Contact>) addressBooks.get(addressBookName));
+			} else if (ioType.equals(IOTYPE.CSV_FILE)) {
+				try {
+					new AddressBookFileIO().writeCSVFile(addressBookName,
+							(LinkedList<Contact>) addressBooks.get(addressBookName));
+				} catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
+					e.printStackTrace();
+				}
+			}
 		} else {
 			System.out.println("Please enter the correct address book name!");
 		}
@@ -382,17 +388,20 @@ public class AddressBookMain {
 	/**
 	 * Reads the file and adds contacts to the particular address book
 	 */
-	public void readContactsFromAFile(String fileName, String addressBookName) {
+	public void readContacts(String fileName, String addressBookName, IOTYPE ioType) {
 		File file = new File(fileName);
+		LinkedList<Contact> contactList = new LinkedList<Contact>();
+		if (ioType.equals(IOTYPE.TXT_FILE)) {
+			contactList = new AddressBookFileIO().readTextFile(file);
+		} else if (ioType.equals(IOTYPE.CSV_FILE)) {
+			contactList = new AddressBookFileIO().readCSVFile(file);
+		}
+
 		if (!isAddressBookByThatNameExists(addressBookName)) {
 			addAddressBook(addressBookName);
-			addressBooks.put(addressBookName, new AddressBookFileIO().readContactsToAddressBooks(file));
+			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact));
 		} else {
-			System.out.println(
-					"Address Book by that already exists! Do you want to overwrite the content of the address books (Y/N)?");
-			if ('Y' == (SC.next().charAt(0))) {
-				addressBooks.put(addressBookName, new AddressBookFileIO().readContactsToAddressBooks(file));
-			}
+			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact));
 		}
 	}
 }

@@ -1,9 +1,15 @@
 package com.capgemini.addressbook;
 
-public class Contact {
 
-	private String firstName, lastName, address, city, state, email;
-	private long zip, phoneNumber;
+public class Contact {
+	private String firstName;
+	private String lastName;
+	private String address;
+	private String city;
+	private String state;
+	private String email;
+	private long zip;
+	private long phoneNumber;
 
 	public Contact(String firstName, String lastName, String address, String city, String state, String email, long zip,
 			long phoneNumber) {
@@ -90,14 +96,14 @@ public class Contact {
 
 	@Override
 	public boolean equals(Object obj) {
-		if(obj == this) {
+		if (obj == this) {
 			return true;
 		}
-		if(!(obj instanceof Contact)) {
+		if (!(obj instanceof Contact)) {
 			return false;
 		}
 		Contact contact = (Contact) obj;
-		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName()) ;
+		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
 
 	}
 }

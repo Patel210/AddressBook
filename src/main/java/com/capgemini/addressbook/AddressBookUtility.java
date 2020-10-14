@@ -20,7 +20,7 @@ public class AddressBookUtility {
 							+ " get contacts by city\n5. get contacts by state\n6. get a list of all contact in particular city\n7. get a count of contacts by city"
 							+ "\n8. sort the address book by name\n9. sort the address book by city\n10. sort the address book by state"
 							+ "\n11. sort the address book by zip\n12. write address book to text file\n13. write address book to CSV file"
-							+ "\n14. read contacts from a text file\n15. read contacts from a CSV file\n16. Exit");
+							+ "\n14. read contacts from a text file\n15. read contacts from a CSV file\n16. write address book to JSON\n17. read contacts from json file\n18. Exit");
 
 			choice = sc.nextInt();
 			switch (choice) {
@@ -90,9 +90,18 @@ public class AddressBookUtility {
 				System.out.println("Enter the address book where you want to store the contacts");
 				addressBookMain.readContacts(fileName1, sc.next(), IOTYPE.CSV_FILE);
 				break;
+			case 16:
+				System.out.println("Enter the name of the address book you want to write in a file:");
+				addressBookMain.writeAddressBook(sc.next(), IOTYPE.JSON_FILE);
+				break;
+			case 17:
+				System.out.println("Enter the file name:");
+				String file = sc.next();
+				System.out.println("Enter the address book where you want to store the contacts");
+				addressBookMain.readContacts(file, sc.next(), IOTYPE.JSON_FILE);
 			}
 
-		} while (choice != 16);
+		} while (choice != 18);
 
 		sc.close();
 	}

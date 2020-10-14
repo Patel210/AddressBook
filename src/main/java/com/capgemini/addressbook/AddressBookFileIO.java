@@ -2,14 +2,18 @@ package com.capgemini.addressbook;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedList;
 
+import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
@@ -24,6 +28,38 @@ public class AddressBookFileIO {
 	private static String WORK_SPACE = "\\eclipse-workspace\\AddressBook";
 
 	public AddressBookFileIO() {
+	}
+
+	/**
+	 * get Path where data needs to be stored
+	 */
+	public Path getPathToWrite(String addressBookName) {
+		Path workPath = null;
+		try {
+			workPath = Paths.get(HOME + WORK_SPACE + "\\OutputDirectory");
+			if (Files.notExists(workPath)) {
+				Files.createDirectories(workPath);
+			}
+			workPath = Paths.get(workPath + "\\" + addressBookName + "--contacts");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return workPath;
+	}
+
+	/**
+	 * get Path from where data is read
+	 */
+	public Path getPathToRead(File file) {
+		Path workPath = null;
+		workPath = Paths.get(HOME + WORK_SPACE + "\\InputDirectory");
+		if (Files.exists(workPath)) {
+			workPath = Paths.get(workPath + "\\" + file);
+			if (Files.notExists(workPath)) {
+				workPath = null;
+			}
+		}
+		return workPath;
 	}
 
 	/**
@@ -99,34 +135,31 @@ public class AddressBookFileIO {
 	}
 
 	/**
-	 * get Path where data needs to be stored
+	 * Writes contacts to a JSON file by creating the new file
 	 */
-	public Path getPathToWrite(String addressBookName) {
-		Path workPath = null;
-		try {
-			workPath = Paths.get(HOME + WORK_SPACE + "\\OutputDirectory");
-			if (Files.notExists(workPath)) {
-				Files.createDirectories(workPath);
-			}
-			workPath = Paths.get(workPath + "\\" + addressBookName + "--contacts");
-		} catch (IOException e) {
-			e.printStackTrace();
+	public void writeJSONFile(String addressBookName, LinkedList<Contact> contactList) throws IOException {
+		try (Writer writer = Files.newBufferedWriter(Paths.get(getPathToWrite(addressBookName) + ".json"));) {
+			Gson gson = new Gson();
+			String json = gson.toJson(contactList);
+			writer.write(json);
 		}
-		return workPath;
 	}
 
 	/**
-	 * get Path from where data is read
+	 * Reads contacts from JSON file and returns the List of contacts
 	 */
-	public Path getPathToRead(File file) {
-		Path workPath = null;
-		workPath = Paths.get(HOME + WORK_SPACE + "\\InputDirectory");
-		if (Files.exists(workPath)) {
-			workPath = Paths.get(workPath + "\\" + file);
-			if (Files.notExists(workPath)) {
-				workPath = null;
-			}
+	public LinkedList<Contact> readJSONFile(File file) {
+		LinkedList<Contact> contactList = new LinkedList<Contact>();
+		Path path = getPathToRead(file);
+		try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()));) {
+			Gson gson = new Gson();
+			Contact[] contacts = gson.fromJson(reader, Contact[].class);
+			contactList = new LinkedList(Arrays.asList(contacts));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		return workPath;
+		return contactList;
 	}
 }

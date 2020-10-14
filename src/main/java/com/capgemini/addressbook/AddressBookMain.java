@@ -1,6 +1,7 @@
 package com.capgemini.addressbook;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -22,7 +23,7 @@ interface AddingKVpair {
 public class AddressBookMain {
 
 	enum IOTYPE {
-		CONSOLE, TXT_FILE, CSV_FILE
+		CONSOLE, TXT_FILE, CSV_FILE, JSON_FILE;
 	}
 
 	private static Map<String, List<Contact>> addressBooks = new HashMap<String, List<Contact>>();
@@ -364,7 +365,7 @@ public class AddressBookMain {
 		}
 	}
 
-	/*
+	/**
 	 * Writes the address book in a file
 	 */
 	public void writeAddressBook(String addressBookName, IOTYPE ioType) {
@@ -379,6 +380,15 @@ public class AddressBookMain {
 				} catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
 					e.printStackTrace();
 				}
+			} else if (ioType.equals(IOTYPE.JSON_FILE)) {
+				try {
+					new AddressBookFileIO().writeJSONFile(addressBookName,
+							(LinkedList<Contact>) addressBooks.get(addressBookName));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				addressBooks.get(addressBookName).forEach(System.out::println);
 			}
 		} else {
 			System.out.println("Please enter the correct address book name!");
@@ -395,6 +405,14 @@ public class AddressBookMain {
 			contactList = new AddressBookFileIO().readTextFile(file);
 		} else if (ioType.equals(IOTYPE.CSV_FILE)) {
 			contactList = new AddressBookFileIO().readCSVFile(file);
+		} else if (ioType.equals(IOTYPE.JSON_FILE)) {
+			contactList = new AddressBookFileIO().readJSONFile(file);
+		} else {
+			System.out.println("Enter the no of contacts you want to add: ");
+			int noOfContacts = SC.nextInt();
+			for (int i = 0; i < noOfContacts; i++) {
+				contactList.add(createContact());
+			}
 		}
 
 		if (!isAddressBookByThatNameExists(addressBookName)) {

@@ -2,14 +2,13 @@ package com.capgemini.addressbookservice;
 
 import java.io.File; 
 import java.io.IOException;
-import java.security.KeyStore.Entry;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -401,6 +400,20 @@ public class AddressBookService {
 		} else {
 			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact));
 		}
+	}
+
+	/**
+	 * Read contacts from DB, added between given date range
+	 */
+	public LinkedList<Contact> readContactForDateRange(IOTYPE type, LocalDate startDate, LocalDate endDate) {
+		if (type.equals(IOTYPE.DB_IO)) {
+			try {
+				return addressBookDBService.getContactForDateRange(startDate, endDate);
+			} catch (DatabaseException e) {
+				System.out.println(e.getMessage());
+			}
+		}
+		return null;
 	}
 
 	/**

@@ -1,11 +1,13 @@
 package com.capgemini.dbservice;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,7 +56,15 @@ public class AddressBookDBService {
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}
 	}
-
+	
+	/**
+	 * Returns List of contacts that were added between the given date range
+	 */
+	public LinkedList<Contact> getContactForDateRange(LocalDate startDate, LocalDate endDate) throws DatabaseException {
+		String query = String.format("SELECT * FROM contact inner join contact_address ON contact.contact_id = contact_address.contact_id "+ 
+				"WHERE date_added BETWEEN '%s' AND '%s'", Date.valueOf(startDate), Date.valueOf(endDate));
+		return getContacts(query);
+	}
 	
 	/**
 	 * To update the contact's phone number
@@ -88,9 +98,23 @@ public class AddressBookDBService {
 				long zip = result.getLong("zip");
 				long phoneNumber = result.getLong("phone_number1");
 				String email = result.getString("email");
-				contacts.add(new Contact(id, firstName, lastName, address, city, state, email, zip, phoneNumber));
+				LocalDate date = result.getDate("date_added").toLocalDate();
+				contacts.add(new Contact(id, firstName, lastName, address, city, state, email, zip, phoneNumber, date));
 			}
 			return (LinkedList<Contact>) contacts;
+		} catch (SQLException e) {
+			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
+		}
+	}
+
+	/**
+	 * Return Contacts retrieved by given query
+	 */
+	private LinkedList<Contact> getContacts(String query) throws DatabaseException {
+		try(Connection connection = getConnection()){
+			Statement statement = connection.createStatement();
+			ResultSet result = statement.executeQuery(query);
+			return getContacts(result);
 		} catch (SQLException e) {
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}
@@ -100,18 +124,9 @@ public class AddressBookDBService {
 	 * Returns list of contact from particular address book with given book id
 	 */
 	private LinkedList<Contact> getContactsFromDB(int book_id) throws DatabaseException {
-		String query = "select * from contact inner join contact_address on contact.contact_id = contact_address.contact_id "+
-				 "where contact.contact_id in (select contact_id from address_book_contact where book_id = ?);";
-		LinkedList<Contact> list = new LinkedList<Contact>();
-		try(Connection connection = getConnection()){
-			PreparedStatement statement = connection.prepareStatement(query);
-			statement.setInt(1, book_id);
-			ResultSet result = statement.executeQuery();
-			list = getContacts(result);
-		} catch (SQLException e) {
-			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
-		}
-		return list;
+		String query = String.format("select * from contact inner join contact_address on contact.contact_id = contact_address.contact_id "+
+				 "where contact.contact_id in (select contact_id from address_book_contact where book_id = '%s')", book_id);
+		return this.getContacts(query);
 	}
 
 	/**

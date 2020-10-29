@@ -49,4 +49,14 @@ public class AddressBookServiceTest {
 		assertEquals(1, (int) contactCountByCity.get("New Delhi"));
 		assertEquals(1, (int) contactCountByCity.get("Hyderabad"));
 	}
+	
+	@Test
+	public void givenAddressBookDB_WhenRetrievedContactCountByState_ShouldReturnCorrectResult() {
+		AddressBookService addressBookService = new AddressBookService();
+		Map<String, Integer> contactCountByState = addressBookService.getContactCountByStateFromDB();
+		assertEquals(2, (int) contactCountByState.get("Rajasthan")); 
+		assertEquals(1, (int) contactCountByState.get("Maharasthra"));
+		assertEquals(1, (int) contactCountByState.get("Delhi"));
+		assertEquals(1, (int) contactCountByState.get("Tamilnadu"));
+	}
 }

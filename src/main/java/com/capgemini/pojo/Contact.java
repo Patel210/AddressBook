@@ -1,7 +1,8 @@
-package com.capgemini.addressbook;
+package com.capgemini.pojo;
 
 
 public class Contact {
+	private int id;
 	private String firstName;
 	private String lastName;
 	private String address;
@@ -13,7 +14,6 @@ public class Contact {
 
 	public Contact(String firstName, String lastName, String address, String city, String state, String email, long zip,
 			long phoneNumber) {
-		super();
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.address = address;
@@ -22,6 +22,12 @@ public class Contact {
 		this.email = email;
 		this.zip = zip;
 		this.phoneNumber = phoneNumber;
+	}
+	
+	public Contact(int id, String firstName, String lastName, String address, String city, String state, String email, long zip,
+			long phoneNumber) {
+		this(firstName, lastName, address, city, state, email, zip, phoneNumber);
+		this.id = id;
 	}
 
 	public String getFirstName() {
@@ -105,5 +111,9 @@ public class Contact {
 		Contact contact = (Contact) obj;
 		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
 
+	}
+
+	public int getId() {
+		return id;
 	}
 }

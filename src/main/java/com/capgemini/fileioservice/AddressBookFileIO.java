@@ -1,4 +1,4 @@
-package com.capgemini.addressbook;
+package com.capgemini.fileioservice;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import com.capgemini.pojo.Contact;
 import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;

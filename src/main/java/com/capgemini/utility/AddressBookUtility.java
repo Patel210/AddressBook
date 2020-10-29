@@ -1,17 +1,18 @@
-package com.capgemini.addressbook;
+package com.capgemini.utility;
 
-import java.util.LinkedList;
+import java.util.LinkedList; 
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
-import com.capgemini.addressbook.AddressBookMain.IOTYPE;
+import com.capgemini.addressbookservice.AddressBookService;
+import com.capgemini.addressbookservice.AddressBookService.IOTYPE;
+import com.capgemini.pojo.Contact;
 
 public class AddressBookUtility {
 
 	public static void main(String[] args) {
 
-		AddressBookMain addressBookMain = new AddressBookMain();
+		AddressBookService addressBookService = new AddressBookService();
 		Scanner sc = new Scanner(System.in);
 		int choice;
 		do {
@@ -26,79 +27,79 @@ public class AddressBookUtility {
 			switch (choice) {
 			case 1:
 				System.out.println("Enter the address book name: ");
-				addressBookMain.addAddressBook(sc.next());
+				addressBookService.addAddressBook(sc.next());
 				break;
 			case 2:
 				System.out.println("Enter the address book name for entering the contact: ");
-				Contact contact = addressBookMain.createContact();
-				addressBookMain.addContactToParticularAddressBook(sc.next(), contact);
+				Contact contact = addressBookService.createContact();
+				addressBookService.addContactToParticularAddressBook(sc.next(), contact);
 				break;
 			case 3:
 				System.out.println("Enter the address book name for viewing: ");
-				addressBookMain.viewAddressBook(sc.next());
+				addressBookService.viewAddressBook(sc.next());
 				break;
 			case 4:
-				Map<String, LinkedList<Contact>> contactsByCity = addressBookMain.addressBookByCity();
+				Map<String, LinkedList<Contact>> contactsByCity = addressBookService.addressBookByCity();
 				System.out.println(contactsByCity);
 				break;
 			case 5:
-				Map<String, LinkedList<Contact>> contactsByState = addressBookMain.addressBookByState();
+				Map<String, LinkedList<Contact>> contactsByState = addressBookService.addressBookByState();
 				System.out.println(contactsByState);
 				break;
 			case 6:
 				System.out.println("Enter the city: ");
-				List<Contact> listOfContacts = addressBookMain.listOfContactsInParticularCity(sc.next());
+				List<Contact> listOfContacts = addressBookService.listOfContactsInParticularCity(sc.next());
 				listOfContacts.stream().forEach(System.out::println);
 				break;
 			case 7:
-				Map<String, Integer> countByCity = addressBookMain.contactCountByCity();
+				Map<String, Integer> countByCity = addressBookService.contactCountByCity();
 				System.out.println(countByCity);
 				break;
 			case 8:
 				System.out.println("Enter the name of address book you want to sort: ");
-				addressBookMain.sortAddressBookByPersonName(sc.next());
+				addressBookService.sortAddressBookByPersonName(sc.next());
 				break;
 			case 9:
 				System.out.println("Enter the name of address book you want to sort: ");
-				addressBookMain.sortAddressBookByCity(sc.next());
+				addressBookService.sortAddressBookByCity(sc.next());
 				break;
 			case 10:
 				System.out.println("Enter the name of address book you want to sort: ");
-				addressBookMain.sortAddressBookByState(sc.next());
+				addressBookService.sortAddressBookByState(sc.next());
 				break;
 			case 11:
 				System.out.println("Enter the name of address book you want to sort: ");
-				addressBookMain.sortAddressBookByZip(sc.next());
+				addressBookService.sortAddressBookByZip(sc.next());
 				break;
 			case 12:
 				System.out.println("Enter the name of the address book you want to write in a file:");
-				addressBookMain.writeAddressBook(sc.next(), IOTYPE.TXT_FILE);
+				addressBookService.writeAddressBook(sc.next(), IOTYPE.TXT_FILE);
 				break;
 			case 13:
 				System.out.println("Enter the name of the address book you want to write in a file:");
-				addressBookMain.writeAddressBook(sc.next(), IOTYPE.CSV_FILE);
+				addressBookService.writeAddressBook(sc.next(), IOTYPE.CSV_FILE);
 				break;
 			case 14:
 				System.out.println("Enter the file name:");
 				String fileName = sc.next();
 				System.out.println("Enter the address book where you want to store the contacts");
-				addressBookMain.readContacts(fileName, sc.next(), IOTYPE.TXT_FILE);
+				addressBookService.readContacts(fileName, sc.next(), IOTYPE.TXT_FILE);
 				break;
 			case 15:
 				System.out.println("Enter the file name:");
 				String fileName1 = sc.next();
 				System.out.println("Enter the address book where you want to store the contacts");
-				addressBookMain.readContacts(fileName1, sc.next(), IOTYPE.CSV_FILE);
+				addressBookService.readContacts(fileName1, sc.next(), IOTYPE.CSV_FILE);
 				break;
 			case 16:
 				System.out.println("Enter the name of the address book you want to write in a file:");
-				addressBookMain.writeAddressBook(sc.next(), IOTYPE.JSON_FILE);
+				addressBookService.writeAddressBook(sc.next(), IOTYPE.JSON_FILE);
 				break;
 			case 17:
 				System.out.println("Enter the file name:");
 				String file = sc.next();
 				System.out.println("Enter the address book where you want to store the contacts");
-				addressBookMain.readContacts(file, sc.next(), IOTYPE.JSON_FILE);
+				addressBookService.readContacts(file, sc.next(), IOTYPE.JSON_FILE);
 			}
 
 		} while (choice != 18);

@@ -1,6 +1,6 @@
-package com.capgemini.addressbook;
+package com.capgemini.addressbookservice;
 
-import java.io.File;
+import java.io.File; 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,25 +12,32 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.capgemini.dbservice.AddressBookDBService;
+import com.capgemini.exceptions.DatabaseException;
+import com.capgemini.fileioservice.AddressBookFileIO;
+import com.capgemini.pojo.AddressBook;
+import com.capgemini.pojo.Contact;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 @FunctionalInterface
-interface AddingKVpair {
+interface AddKVpair {
 	void addKVPair(String key, LinkedList<Contact> value);
 }
 
-public class AddressBookMain {
+public class AddressBookService {
 
-	enum IOTYPE {
-		CONSOLE, TXT_FILE, CSV_FILE, JSON_FILE;
+	public enum IOTYPE {
+		CONSOLE, TXT_FILE, CSV_FILE, JSON_FILE, DB_IO;
 	}
 
 	private static Map<String, List<Contact>> addressBooks = new HashMap<String, List<Contact>>();
+	private static LinkedList<AddressBook> addressBooksDB = null;
+	private static AddressBookDBService addressBookDBService = new AddressBookDBService();
 	private static final Scanner SC = new Scanner(System.in);
 
-	public AddressBookMain() {
-		super();
+	public AddressBookService() {
+		
 	}
 
 	/**
@@ -191,7 +198,6 @@ public class AddressBookMain {
 		LinkedList<Contact> contactInParticularState = (LinkedList<Contact>) addressBooks.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getState().equals(state))
 				.collect(Collectors.toCollection(LinkedList::new));
-
 		if (contactInParticularState.size() == 0) {
 			System.out.println("No contact exist in particular state");
 		}
@@ -205,7 +211,6 @@ public class AddressBookMain {
 		LinkedList<Contact> contactInParticularCity = (LinkedList<Contact>) addressBooks.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getCity().equals(city))
 				.collect(Collectors.toCollection(LinkedList::new));
-
 		if (contactInParticularCity.size() == 0) {
 			System.out.println("No contact exist in particular city");
 		}
@@ -217,9 +222,8 @@ public class AddressBookMain {
 	 */
 	public Map<String, LinkedList<Contact>> addressBookByCity() {
 		Map<String, LinkedList<Contact>> contactByCities = new HashMap<String, LinkedList<Contact>>();
-		Function<String, LinkedList<Contact>> cityToContactsInThatCity = str -> (LinkedList<Contact>) listOfContactsInParticularCity(
-				str);
-		AddingKVpair addingKVPair = (x, y) -> contactByCities.put(x, y);
+		Function<String, LinkedList<Contact>> cityToContactsInThatCity = str -> (LinkedList<Contact>) listOfContactsInParticularCity(str);
+		AddKVpair addingKVPair = (x, y) -> contactByCities.put(x, y);
 		listOfAllCities().forEach(str -> addingKVPair.addKVPair(str, cityToContactsInThatCity.apply(str)));
 
 		return contactByCities;
@@ -230,11 +234,9 @@ public class AddressBookMain {
 	 */
 	public Map<String, LinkedList<Contact>> addressBookByState() {
 		Map<String, LinkedList<Contact>> contactByStates = new HashMap<String, LinkedList<Contact>>();
-		Function<String, LinkedList<Contact>> stateToContactsInThatState = str -> (LinkedList<Contact>) listOfContactsInParticularState(
-				str);
-		AddingKVpair addingKVPair = (x, y) -> contactByStates.put(x, y);
+		Function<String, LinkedList<Contact>> stateToContactsInThatState = str -> (LinkedList<Contact>) listOfContactsInParticularState(str);
+		AddKVpair addingKVPair = (x, y) -> contactByStates.put(x, y);
 		listOfAllStates().forEach(str -> addingKVPair.addKVPair(str, stateToContactsInThatState.apply(str)));
-
 		return contactByStates;
 	}
 
@@ -242,9 +244,8 @@ public class AddressBookMain {
 	 * To get the list of city based on all contacts in tha address books
 	 */
 	public List<String> listOfAllCities() {
-		Function<Contact, String> togetCityValue = contact -> contact.getCity();
 		List<String> cities = addressBooks.entrySet().stream().flatMap(entry -> entry.getValue().stream())
-				.map(togetCityValue).collect(Collectors.toList());
+				.map(contact -> contact.getCity()).collect(Collectors.toList());
 		return cities;
 	}
 
@@ -252,9 +253,8 @@ public class AddressBookMain {
 	 * To get the list of state based on all contacts in tha address books
 	 */
 	public List<String> listOfAllStates() {
-		Function<Contact, String> togetStateValue = contact -> contact.getState();
 		List<String> states = addressBooks.entrySet().stream().flatMap(entry -> entry.getValue().stream())
-				.map(togetStateValue).collect(Collectors.toList());
+				.map(contact -> contact.getState()).collect(Collectors.toList());
 		return states;
 	}
 
@@ -265,7 +265,6 @@ public class AddressBookMain {
 		Map<String, Integer> countByCities = new HashMap<String, Integer>();
 		Function<String, Integer> countByCity = str -> (Integer) listOfContactsInParticularCity(str).size();
 		listOfAllCities().stream().forEach(str -> countByCities.put(str, countByCity.apply(str)));
-
 		return countByCities;
 	}
 
@@ -276,68 +275,46 @@ public class AddressBookMain {
 		Map<String, Integer> countByStates = new HashMap<String, Integer>();
 		Function<String, Integer> countByState = str -> listOfContactsInParticularState(str).size();
 		listOfAllStates().stream().forEach(str -> countByStates.put(str, countByState.apply(str)));
-
 		return countByStates;
 	}
 
 	/**
 	 * To sort the entries in the address book by person's name
 	 */
-	public void sortAddressBookByPersonName(String addressBook) {
-
-		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
-		if (isAddressBookByThatNameExists) {
-			if (addressBooks.get(addressBook).size() == 0) {
-				System.out.println("Sorry! There is no contact in this address book to sort!");
-			} else {
-				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
-						.sorted(Comparator.comparing(Contact::getFirstName))
-						.collect(Collectors.toCollection(LinkedList::new));
-
-				addressBooks.replace(addressBook, sortedAddressBook);
-				System.out.println(addressBooks);
-			}
-		} else {
-			System.out.println("There is no address book by this name in the address books");
-		}
+	public void sortAddressBookByPersonName(String addressBookName) {
+		sortAddressBook(addressBookName, Comparator.comparing(Contact::getFirstName));
 	}
 
 	/**
 	 * To sort the entries in the address book by city
 	 */
-	public void sortAddressBookByCity(String addressBook) {
-		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
-		if (isAddressBookByThatNameExists) {
-			if (addressBooks.get(addressBook).size() == 0) {
-				System.out.println("Sorry! There is no contact in this address book to sort!");
-			} else {
-				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
-						.sorted(Comparator.comparing(Contact::getCity))
-						.collect(Collectors.toCollection(LinkedList::new));
-
-				addressBooks.replace(addressBook, sortedAddressBook);
-				System.out.println(addressBooks.get(addressBook));
-			}
-		} else {
-			System.out.println("There is no address book by this name in the address books");
-		}
+	public void sortAddressBookByCity(String addressBookName) {
+		sortAddressBook(addressBookName, Comparator.comparing(Contact::getCity));
 	}
 
 	/**
 	 * To sort the entries in the address book by state
 	 */
-	public void sortAddressBookByState(String addressBook) {
-		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
+	public void sortAddressBookByState(String addressBookName) {
+		sortAddressBook(addressBookName, Comparator.comparing(Contact::getState));
+	}
+	
+	/**
+	 * Sorts the address book based on comparator
+	 */
+	private void sortAddressBook(String addressBookName, Comparator<Contact> comparator) {
+		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
 		if (isAddressBookByThatNameExists) {
-			if (addressBooks.get(addressBook).size() == 0) {
+			if (addressBooks.get(addressBookName).size() == 0) {
 				System.out.println("Sorry! There is no contact in this address book to sort!");
 			} else {
-				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
-						.sorted(Comparator.comparing(Contact::getState))
-						.collect(Collectors.toCollection(LinkedList::new));
+				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBookName)
+																	.stream()
+																	.sorted(comparator)
+																	.collect(Collectors.toCollection(LinkedList::new));
 
-				addressBooks.replace(addressBook, sortedAddressBook);
-				System.out.println(addressBooks.get(addressBook));
+				addressBooks.replace(addressBookName, sortedAddressBook);
+				System.out.println(addressBooks.get(addressBookName));
 			}
 		} else {
 			System.out.println("There is no address book by this name in the address books");
@@ -421,5 +398,29 @@ public class AddressBookMain {
 		} else {
 			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact));
 		}
+	}
+
+	/**
+	 * Reads Address Books from DB
+	 */
+	public int readAddressBook() {
+		try {
+			addressBooksDB = addressBookDBService.readAddressBook();
+			return getContactCount(addressBooksDB);
+		} catch (DatabaseException e) {
+			System.out.println(e.getMessage());
+		}
+		return 0;
+	}
+
+	/**
+	 * returns the contact count in all address books
+	 */
+	private int getContactCount(LinkedList<AddressBook> list) {
+		int count = 0;
+		for (AddressBook addressBook: list) {
+			count += addressBook.getContacts().size();
+		}
+		return count;
 	}
 }

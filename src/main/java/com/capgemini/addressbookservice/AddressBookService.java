@@ -373,6 +373,22 @@ public class AddressBookService {
 			System.out.println("Please enter the correct address book name!");
 		}
 	}
+	
+
+	public void addContactToDB(String firstName, String lastName, String address, String city, String state,
+			String email, long zip, long phoneNumber, LocalDate date, TYPE... types) {
+		try {
+			Contact contact = addressBookDBService.addContactToDB(firstName, lastName, address, city,
+																  state, email, zip, phoneNumber, date, types);
+			for(TYPE type : types) {
+				addressBooksDB.get(type).getContacts().add(contact);
+			}
+		} catch (DatabaseException e) {
+			System.out.println(e.getMessage());
+		}
+		
+	}
+
 
 	/**
 	 * Reads the file and adds contacts to the particular address book

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.time.LocalDate;
 import java.util.LinkedList;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -38,5 +39,14 @@ public class AddressBookServiceTest {
 		LinkedList<Contact> contactInGivenDateRange = addressBookService.readContactForDateRange(IOTYPE.DB_IO, startDate, endDate); 
 		assertEquals(3, contactInGivenDateRange.size());
 	}
-
+	
+	@Test
+	public void givenAddressBookDB_WhenRetrievedContactCountByCity_ShouldReturnCorrectResult() {
+		AddressBookService addressBookService = new AddressBookService();
+		Map<String, Integer> contactCountByCity = addressBookService.getContactCountByCityFromDB();
+		assertEquals(2, (int) contactCountByCity.get("Jaipur")); 
+		assertEquals(1, (int) contactCountByCity.get("Mumbai"));
+		assertEquals(1, (int) contactCountByCity.get("New Delhi"));
+		assertEquals(1, (int) contactCountByCity.get("Hyderabad"));
+	}
 }

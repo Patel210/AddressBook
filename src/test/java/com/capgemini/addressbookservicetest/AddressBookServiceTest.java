@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import com.capgemini.addressbookservice.AddressBookService;
 import com.capgemini.addressbookservice.AddressBookService.IOTYPE;
+import com.capgemini.pojo.AddressBook.TYPE;
 import com.capgemini.pojo.Contact;
 
 public class AddressBookServiceTest {
@@ -58,5 +59,15 @@ public class AddressBookServiceTest {
 		assertEquals(1, (int) contactCountByState.get("Maharasthra"));
 		assertEquals(1, (int) contactCountByState.get("Delhi"));
 		assertEquals(1, (int) contactCountByState.get("Tamilnadu"));
+	}
+	
+	@Test
+	public void givenNewContact_WhenAddedToDB_ShouldBeInSyncWithDB() {
+		AddressBookService addressBookService = new AddressBookService();
+		addressBookService.readAddressBook();
+		addressBookService.addContactToDB("Parth", "Agarwal", "WhiteField", "Bangalore", "Karnataka", "parth.agarwal@gmail.com",
+											235678L, 7890653487L, LocalDate.of(2020, 10, 29), TYPE.PROFESSION, TYPE.FAMILY);
+		boolean result = addressBookService.isContactInSyncWithDB(6);
+		assertTrue(result);
 	}
 }

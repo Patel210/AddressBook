@@ -5,7 +5,7 @@ import java.util.LinkedList;
 public class AddressBook {
 	private int id;
 	private String name;
-	private TYPE type;
+	public TYPE type;
 	private LinkedList<Contact> contacts;
 
 	public enum TYPE {

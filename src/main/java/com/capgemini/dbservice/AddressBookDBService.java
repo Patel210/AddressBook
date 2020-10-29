@@ -6,7 +6,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+
+import org.apache.commons.collections.map.HashedMap;
 
 import com.capgemini.exceptions.DatabaseException;
 import com.capgemini.exceptions.DatabaseException.ExceptionType;
@@ -36,7 +40,7 @@ public class AddressBookDBService {
 	/**
 	 * Reads address Book from DB
 	 */
-	public LinkedList<AddressBook> readAddressBook() throws DatabaseException {
+	public Map<AddressBook.TYPE, AddressBook> readAddressBook() throws DatabaseException {
 		String query = "SELECT * FROM address_book";
 		LinkedList<AddressBook> addressBooks = getAddressBooks(query);
 		addressBooks.forEach(addressBook -> {
@@ -46,8 +50,14 @@ public class AddressBookDBService {
 				System.out.println(e.getMessage());
 			}
 		});
-		return addressBooks;
+		Map<TYPE, AddressBook> addressBookMap = new HashMap<AddressBook.TYPE, AddressBook>();
+		addressBooks.forEach(addressBook -> addressBookMap.put(addressBook.type, addressBook));
+		return addressBookMap;
 	}
+	
+//	public int updateContact(int contactId) {
+//		
+//	}
 
 	/**
 	 * Returns list of contact from particular address book with given book id
@@ -94,7 +104,7 @@ public class AddressBookDBService {
 					list.add(new AddressBook(id, name, TYPE.FAMILY));
 				} 
 				if(type.equalsIgnoreCase("friend")) {
-					list.add(new AddressBook(id, name, TYPE.FAMILY));
+					list.add(new AddressBook(id, name, TYPE.FRIEND));
 				}
 				if(type.equalsIgnoreCase("profession")) {
 					list.add(new AddressBook(id, name, TYPE.PROFESSION));

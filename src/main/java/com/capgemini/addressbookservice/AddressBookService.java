@@ -2,12 +2,14 @@ package com.capgemini.addressbookservice;
 
 import java.io.File; 
 import java.io.IOException;
+import java.security.KeyStore.Entry;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -16,6 +18,7 @@ import com.capgemini.dbservice.AddressBookDBService;
 import com.capgemini.exceptions.DatabaseException;
 import com.capgemini.fileioservice.AddressBookFileIO;
 import com.capgemini.pojo.AddressBook;
+import com.capgemini.pojo.AddressBook.TYPE;
 import com.capgemini.pojo.Contact;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
@@ -32,7 +35,7 @@ public class AddressBookService {
 	}
 
 	private static Map<String, List<Contact>> addressBooks = new HashMap<String, List<Contact>>();
-	private static LinkedList<AddressBook> addressBooksDB = null;
+	private static Map<TYPE, AddressBook> addressBooksDB = null;
 	private static AddressBookDBService addressBookDBService = new AddressBookDBService();
 	private static final Scanner SC = new Scanner(System.in);
 
@@ -416,10 +419,10 @@ public class AddressBookService {
 	/**
 	 * returns the contact count in all address books
 	 */
-	private int getContactCount(LinkedList<AddressBook> list) {
+	private int getContactCount(Map<TYPE, AddressBook> addressBooks) {
 		int count = 0;
-		for (AddressBook addressBook: list) {
-			count += addressBook.getContacts().size();
+		for(Map.Entry<TYPE, AddressBook> entry : addressBooks.entrySet()) {
+			count += entry.getValue().getContacts().size();
 		}
 		return count;
 	}

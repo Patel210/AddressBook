@@ -65,6 +65,22 @@ public class AddressBookDBService {
 				"WHERE date_added BETWEEN '%s' AND '%s'", Date.valueOf(startDate), Date.valueOf(endDate));
 		return getContacts(query);
 	}
+
+	/**
+	 * Returns contact count by city
+	 */
+	public Map<String, Integer> readContactCountByCity() throws DatabaseException {
+		String query = "SELECT COUNT(contact_id) as count, city FROM contact_address GROUP BY city";
+		return getContactCountByCityOrState(query, "city");
+	}
+	
+	/**
+	 * Returns contact count by city
+	 */
+	public Map<String, Integer> readContactCountByState() throws DatabaseException {
+		String query = "SELECT COUNT(contact_id) as count, state FROM contact_address GROUP BY state";
+		return getContactCountByCityOrState(query, "state");
+	}
 	
 	/**
 	 * To update the contact's phone number
@@ -77,6 +93,25 @@ public class AddressBookDBService {
 			statement.setLong(1, phoneNumber);
 			statement.setInt(2, contactId);
 			return statement.executeUpdate();
+		} catch (SQLException e) {
+			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
+		}
+	}
+	
+	/**
+	 * Returns contact count by city or state given the query and field name
+	 */
+	private Map<String, Integer> getContactCountByCityOrState(String query, String fieldName) throws DatabaseException{
+		Map<String, Integer> contactCountByCityOrState = new HashMap<String, Integer>();
+		try(Connection connection = getConnection()){
+			Statement statement = connection.createStatement();
+			ResultSet result = statement.executeQuery(query);
+			while(result.next()) {
+				int count = result.getInt("count");
+				String cityOrState = result.getString(fieldName);
+				contactCountByCityOrState.put(cityOrState, count);
+			}
+			return contactCountByCityOrState;
 		} catch (SQLException e) {
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}

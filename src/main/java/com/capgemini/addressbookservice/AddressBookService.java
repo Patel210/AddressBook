@@ -415,6 +415,32 @@ public class AddressBookService {
 		}
 		return null;
 	}
+	
+	/**
+	 * @return contact count by city
+	 */
+	public Map<String, Integer> getContactCountByCityFromDB() {
+		Map<String, Integer> contactCountByCity = null;
+		try {
+			contactCountByCity = addressBookDBService.readContactCountByCity();
+		} catch (DatabaseException e) {
+			System.out.println(e.getMessage());
+		}
+		return contactCountByCity;
+	}
+	
+	/**
+	 * @return contact count by state
+	 */
+	public Map<String, Integer> getContactCountByStateFromDB() {
+		Map<String, Integer> contactCountByState = null;
+		try {
+			contactCountByState = addressBookDBService.readContactCountByState();
+		} catch (DatabaseException e) {
+			System.out.println(e.getMessage());
+		}
+		return contactCountByState;
+	}
 
 	/**
 	 * Reads Address Books from DB

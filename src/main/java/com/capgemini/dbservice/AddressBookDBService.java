@@ -8,9 +8,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.collections.map.HashedMap;
 
 import com.capgemini.exceptions.DatabaseException;
 import com.capgemini.exceptions.DatabaseException.ExceptionType;
@@ -19,23 +18,6 @@ import com.capgemini.pojo.AddressBook.TYPE;
 import com.capgemini.pojo.Contact;
 
 public class AddressBookDBService {
-	
-	/**
-	 * To get connection object
-	 */
-	private Connection getConnection() throws DatabaseException {
-		String jdbcURL = "jdbc:mysql://localhost:3306/addressbook_service";
-		String user = "root";
-		String password = "Gratitudelog1";
-		Connection connection;
-		try {
-			connection = DriverManager.getConnection(jdbcURL, user, password);
-			System.out.println("Connection successfully established!" + connection);
-		} catch (SQLException e) {
-			throw new DatabaseException("Unable to connect to the database", ExceptionType.UNABLE_TO_CONNECT);
-		}
-		return connection;
-	}
 
 	/**
 	 * Reads address Book from DB
@@ -45,7 +27,7 @@ public class AddressBookDBService {
 		LinkedList<AddressBook> addressBooks = getAddressBooks(query);
 		addressBooks.forEach(addressBook -> {
 			try {
-				addressBook.getContacts().addAll(getContacts(addressBook.getId()));
+				addressBook.getContacts().addAll(getContactsFromDB(addressBook.getId()));
 			} catch (DatabaseException e) {
 				System.out.println(e.getMessage());
 			}
@@ -55,21 +37,47 @@ public class AddressBookDBService {
 		return addressBookMap;
 	}
 	
-//	public int updateContact(int contactId) {
-//		
-//	}
 
 	/**
-	 * Returns list of contact from particular address book with given book id
+	 * returns the contact with a given ID
 	 */
-	private LinkedList<Contact> getContacts(int book_id) throws DatabaseException {
-		String query = "select * from contact inner join contact_address on contact.contact_id = contact_address.contact_id "+
-				 "where contact.contact_id in (select contact_id from address_book_contact where book_id = ?);";
-		LinkedList<Contact> list = new LinkedList<Contact>();
+	public Contact getContact(int contactId) throws DatabaseException {
+		String query = "SELECT * FROM contact, contact_address WHERE contact.contact_id = ? and contact_address.contact_id = ?;";
 		try(Connection connection = getConnection()){
-			PreparedStatement statement = connection.prepareStatement(query);
-			statement.setInt(1, book_id);
+			PreparedStatement statement;
+			statement = connection.prepareStatement(query);
+			statement.setInt(1, contactId);
+			statement.setInt(2, contactId);
 			ResultSet result = statement.executeQuery();
+			return getContacts(result).get(0);
+		} catch (SQLException e) {
+			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
+		}
+	}
+
+	
+	/**
+	 * To update the contact's phone number
+	 */
+	public int updateContactPhoneNumber(int contactId, long phoneNumber) throws DatabaseException {
+		String query = "UPDATE contact SET phone_number1 = ? WHERE contact_id = ?";
+		try(Connection connection = getConnection()){
+			PreparedStatement statement;
+			statement = connection.prepareStatement(query);
+			statement.setLong(1, phoneNumber);
+			statement.setInt(2, contactId);
+			return statement.executeUpdate();
+		} catch (SQLException e) {
+			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
+		}
+	}
+	
+	/**
+	 * Retrieves all the contacts from a result set
+	 */
+	private LinkedList<Contact> getContacts(ResultSet result) throws DatabaseException {
+		List<Contact> contacts = new LinkedList<Contact>();
+		try {	
 			while(result.next()) {
 				int id = result.getInt("contact_id");
 				String firstName = result.getString("first_name");
@@ -80,8 +88,26 @@ public class AddressBookDBService {
 				long zip = result.getLong("zip");
 				long phoneNumber = result.getLong("phone_number1");
 				String email = result.getString("email");
-				list.add(new Contact(id, firstName, lastName, address, city, state, email, zip, phoneNumber));
+				contacts.add(new Contact(id, firstName, lastName, address, city, state, email, zip, phoneNumber));
 			}
+			return (LinkedList<Contact>) contacts;
+		} catch (SQLException e) {
+			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
+		}
+	}
+
+	/**
+	 * Returns list of contact from particular address book with given book id
+	 */
+	private LinkedList<Contact> getContactsFromDB(int book_id) throws DatabaseException {
+		String query = "select * from contact inner join contact_address on contact.contact_id = contact_address.contact_id "+
+				 "where contact.contact_id in (select contact_id from address_book_contact where book_id = ?);";
+		LinkedList<Contact> list = new LinkedList<Contact>();
+		try(Connection connection = getConnection()){
+			PreparedStatement statement = connection.prepareStatement(query);
+			statement.setInt(1, book_id);
+			ResultSet result = statement.executeQuery();
+			list = getContacts(result);
 		} catch (SQLException e) {
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}
@@ -114,5 +140,22 @@ public class AddressBookDBService {
 		} catch (SQLException e) {
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}
+	}
+	
+	/**
+	 * To get connection object
+	 */
+	private Connection getConnection() throws DatabaseException {
+		String jdbcURL = "jdbc:mysql://localhost:3306/addressbook_service";
+		String user = "root";
+		String password = "Gratitudelog1";
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection(jdbcURL, user, password);
+			System.out.println("Connection successfully established!" + connection);
+		} catch (SQLException e) {
+			throw new DatabaseException("Unable to connect to the database", ExceptionType.UNABLE_TO_CONNECT);
+		}
+		return connection;
 	}
 }

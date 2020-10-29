@@ -417,6 +417,40 @@ public class AddressBookService {
 	}
 
 	/**
+	 * Update the contact number in data base for a given contact
+	 */
+	public void updateContactPhoneNumber(int contactId, long phoneNumber) {
+		try {
+			int rowAffected = addressBookDBService.updateContactPhoneNumber(contactId, phoneNumber);
+			if(rowAffected == 1) {
+				addressBooksDB.entrySet().forEach(entry -> entry.getValue().getContacts().stream().forEach(contact->  
+												{ if (contact.getId() == contactId) contact.setPhoneNumber(phoneNumber);}));
+			}
+		} catch (DatabaseException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	/**
+	 * Checks whether a contact is in sync with DB
+	 */
+	public boolean isContactInSyncWithDB(int contactId) {
+		try {
+			Contact updatedContact = addressBookDBService.getContact(contactId);
+			for (Map.Entry<TYPE, AddressBook> entry : addressBooksDB.entrySet()) {
+				boolean flag = entry.getValue().getContacts().stream().filter(contact -> contact.getId() == contactId).allMatch(contact -> contact.equals(updatedContact));
+				if(flag == false) {
+					return false;
+				}
+			}
+			return true;
+		} catch (DatabaseException e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
+	/**
 	 * returns the contact count in all address books
 	 */
 	private int getContactCount(Map<TYPE, AddressBook> addressBooks) {

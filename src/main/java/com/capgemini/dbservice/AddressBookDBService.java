@@ -20,7 +20,7 @@ import com.capgemini.pojo.AddressBook.TYPE;
 import com.capgemini.pojo.Contact;
 
 public class AddressBookDBService {
-
+	private int connectionCounter = 0;
 	/**
 	 * Reads address Book from DB
 	 */
@@ -103,30 +103,67 @@ public class AddressBookDBService {
 	 */
 	public Contact addContactToDB(String firstName, String lastName, String address, String city, String state,
 			String email, long zip, long phoneNumber, LocalDate date, TYPE[] types) throws DatabaseException {
-		Connection connection = null;
-		int contactId = -1;
-		Contact contact = null;
 		
+		Connection[] connection = {null};
+		int[] contactId = {-1};
+		Contact contact = null;
 		try {
-			connection = getConnection();
-			connection.setAutoCommit(false);
+			connection[0] = getConnection();
+			connection[0].setAutoCommit(false);
 		} catch (SQLException e) {
 			throw new DatabaseException("Error while setting Auto Commit", ExceptionType.AUTO_COMMIT_ERROR);
 		}
 		
-		contactId = addContact(connection, firstName, lastName, address, city, state, email, zip, phoneNumber, date);
-		boolean isSuccessfull = addToContactAddressBookTable(connection, contactId, types);
-		if(isSuccessfull) {
-			contact = new Contact(contactId, firstName, lastName, address, city, state, email, zip, phoneNumber, date);
+		synchronized (this) {
+			boolean[] completionStatus = {false, false};
+			contactId[0] = addContact(connection[0], firstName, lastName, email, phoneNumber, date);
+			if (contactId[0] != -1) {
+				
+				//Adds Contact's address to the contact_address table in the database
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							addContactAddress(connection[0], contactId[0], address, city, state, zip);
+						} catch (DatabaseException e) {
+							System.out.println(e.getMessage());
+						}
+						completionStatus[0] = true;
+					}
+				}).start();
+
+				//Adds contacts to the address book in the database
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							completionStatus[1] = addToContactAddressBookTable(connection[0], contactId[0], types);
+						} catch (DatabaseException e) {
+							System.out.println(e.getMessage());
+						}
+						completionStatus[1] = true;
+					}
+				}).start();
+				
+				while(completionStatus[0] == false || completionStatus[1] == false) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						System.out.println(e.getMessage());
+					}
+				}
+				contact = new Contact(contactId[0], firstName, lastName, address, city, state, email, zip, phoneNumber);
+			}
 		}
+
 		try {
-			connection.commit();
+			connection[0].commit();
 		} catch (SQLException e) {
 			throw new DatabaseException("Cannot Commit", ExceptionType.UNABLE_TO_COMMIT);
 		}finally {
 			if (connection != null) {
 				try {
-					connection.close();
+					connection[0].close();
 				} catch (SQLException e) {
 					throw new DatabaseException("Cannot close connection object", ExceptionType.UNABLE_TO_CLOSE_CONNECTION);
 				}
@@ -163,7 +200,6 @@ public class AddressBookDBService {
 		}
 	}
 
-
 	/**
 	 * Return address book Id for a given type
 	 */
@@ -181,18 +217,15 @@ public class AddressBookDBService {
 		}
 	}
 
-
 	/**
-	 * Adds contact to contact and contact_address tables 
+	 * Adds contact to the "contact" table in the database
 	 */
-	private int addContact(Connection connection, String firstName, String lastName, String address, String city,
-			String state, String email, long zip, long phoneNumber, LocalDate date) throws DatabaseException {
+	private int addContact(Connection connection, String firstName, String lastName, String email, long phoneNumber, LocalDate date) throws DatabaseException {
 		int contactId = -1;
 		try(Statement statement = connection.createStatement()){
 			String query = String.format("INSERT INTO contact (date_added, first_name, last_name, phone_number, email)"+
 										  "VALUES ('%s', '%s', '%s', '%s', '%s')", date, firstName, lastName, phoneNumber, email);
 			int rowAffected = statement.executeUpdate(query, statement.RETURN_GENERATED_KEYS);
-			contactId = -1;
 			if(rowAffected == 1) {
 				ResultSet result = statement.getGeneratedKeys();
 				if(result.next()) {
@@ -207,7 +240,14 @@ public class AddressBookDBService {
 			}
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}
-		
+		return contactId;
+	}
+	
+	/**
+	 * Adds contact to the "contact_address" table in the database
+	 */
+	private void addContactAddress(Connection connection, int contactId, String address, String city,
+									String state,long zip) throws DatabaseException {
 		try(Statement statement = connection.createStatement()){
 			String query = String.format("INSERT INTO contact_address (contact_id, address, city, state, zip)"+
 										"VALUES('%s', '%s', '%s', '%s', '%s')", contactId, address, city, state, zip);
@@ -220,8 +260,6 @@ public class AddressBookDBService {
 			}
 			throw new DatabaseException("Error while executing the query", ExceptionType.UNABLE_TO_EXECUTE_QUERY);
 		}
-		
-		return contactId;
 	}
 
 	/**
@@ -321,14 +359,18 @@ public class AddressBookDBService {
 	/**
 	 * To get connection object
 	 */
-	private Connection getConnection() throws DatabaseException {
+	private synchronized Connection getConnection() throws DatabaseException {
+		connectionCounter++;
 		String jdbcURL = "jdbc:mysql://localhost:3306/addressbook_service";
 		String user = "root";
 		String password = "Gratitudelog1";
 		Connection connection;
 		try {
+			System.out.println("Processing Thread: "+Thread.currentThread().getName()+
+					" Connecting to database with Id: "+ connectionCounter);
 			connection = DriverManager.getConnection(jdbcURL, user, password);
-			System.out.println("Connection successfully established!" + connection);
+			System.out.println("Processing Thread: "+Thread.currentThread().getName()+
+					" Id: "+ connectionCounter + " Connection successfully established!" + connection);
 		} catch (SQLException e) {
 			throw new DatabaseException("Unable to connect to the database", ExceptionType.UNABLE_TO_CONNECT);
 		}

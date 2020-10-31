@@ -373,22 +373,58 @@ public class AddressBookService {
 			System.out.println("Please enter the correct address book name!");
 		}
 	}
-	
 
-	public void addContactToDB(String firstName, String lastName, String address, String city, String state,
+	/**
+	 * Add contact to address book Database
+	 */
+	public int addContactToDB(String firstName, String lastName, String address, String city, String state,
 			String email, long zip, long phoneNumber, LocalDate date, TYPE... types) {
+		
 		try {
 			Contact contact = addressBookDBService.addContactToDB(firstName, lastName, address, city,
 																  state, email, zip, phoneNumber, date, types);
-			for(TYPE type : types) {
-				addressBooksDB.get(type).getContacts().add(contact);
+			if (contact != null) {
+				for (TYPE type : types) {
+					addressBooksDB.get(type).getContacts().add(contact);
+				}
 			}
+			return contact.getId();
 		} catch (DatabaseException e) {
 			System.out.println(e.getMessage());
 		}
-		
+		return 0;
 	}
-
+	
+	/**
+	 * Add multiple contacts to address book Database
+	 */
+	public boolean addContactToDB(Map<TYPE[], Contact> contacts) {
+		Map<Integer, Boolean> contactInsertionStatus = new HashMap<Integer, Boolean>();
+		Map<Integer, Boolean> contactSyncStatus = new HashMap<Integer, Boolean>();
+		contacts.entrySet().forEach(entry -> {
+			Contact contact = entry.getValue();
+			contactInsertionStatus.put(contact.hashCode(), false);
+			Runnable task = () -> {
+				System.out.println("Contact Being Added: "+ Thread.currentThread().getName());
+				int contactId = addContactToDB(contact.getFirstName(), contact.getLastName(),
+						contact.getAddress(), contact.getCity(), contact.getState(),
+						contact.getEmail(), contact.getZip(), contact.getPhoneNumber(), contact.getDate(), entry.getKey());
+				if(contactId != 0) contactSyncStatus.put(contact.hashCode(), isContactInSyncWithDB(contactId));
+				System.out.println("Contact Added: " + Thread.currentThread().getName());
+				contactInsertionStatus.put(contact.hashCode(), true);
+			};
+			Thread thread = new Thread(task, contact.getFirstName());
+			thread.start();
+		});
+		while (contactInsertionStatus.containsValue(false)) {
+			try { 
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				System.out.println(e.getMessage());
+			}
+		}
+		return (contactSyncStatus.containsValue(false)) ? false : true;
+	} 
 
 	/**
 	 * Reads the file and adds contacts to the particular address book
@@ -493,7 +529,11 @@ public class AddressBookService {
 		try {
 			Contact updatedContact = addressBookDBService.getContact(contactId);
 			for (Map.Entry<TYPE, AddressBook> entry : addressBooksDB.entrySet()) {
-				boolean flag = entry.getValue().getContacts().stream().filter(contact -> contact.getId() == contactId).allMatch(contact -> contact.equals(updatedContact));
+				boolean flag = entry.getValue()
+									.getContacts()
+									.stream()
+									.filter(contact -> contact.getId() == contactId)
+									.allMatch(contact -> contact.equals(updatedContact));
 				if(flag == false) {
 					return false;
 				}

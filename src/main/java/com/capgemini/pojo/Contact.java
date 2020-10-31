@@ -1,6 +1,7 @@
 package com.capgemini.pojo;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class Contact {
 	private int id;
@@ -107,6 +108,14 @@ public class Contact {
 	public void setPhoneNumber(long phoneNumber) {
 		this.phoneNumber = phoneNumber;
 	}
+	
+	public int getId() {
+		return id;
+	}
+
+	public LocalDate getDate() {
+		return date;
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -117,11 +126,12 @@ public class Contact {
 			return false;
 		}
 		Contact contact = (Contact) obj;
-		return firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
+		return  id == contact.getId() && firstName.equals(contact.getFirstName()) && lastName.equals(contact.getLastName());
 
 	}
-
-	public int getId() {
-		return id;
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, firstName, lastName, address, city, state, zip, phoneNumber, email, date);
 	}
 }

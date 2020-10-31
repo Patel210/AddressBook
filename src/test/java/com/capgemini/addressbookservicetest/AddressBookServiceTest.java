@@ -2,7 +2,10 @@ package com.capgemini.addressbookservicetest;
 
 import static org.junit.Assert.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -10,6 +13,7 @@ import org.junit.Test;
 
 import com.capgemini.addressbookservice.AddressBookService;
 import com.capgemini.addressbookservice.AddressBookService.IOTYPE;
+import com.capgemini.pojo.AddressBook;
 import com.capgemini.pojo.AddressBook.TYPE;
 import com.capgemini.pojo.Contact;
 
@@ -68,6 +72,27 @@ public class AddressBookServiceTest {
 		addressBookService.addContactToDB("Parth", "Agarwal", "WhiteField", "Bangalore", "Karnataka", "parth.agarwal@gmail.com",
 											235678L, 7890653487L, LocalDate.of(2020, 10, 29), TYPE.PROFESSION, TYPE.FAMILY);
 		boolean result = addressBookService.isContactInSyncWithDB(6);
+		assertTrue(result);
+	}
+	
+	@Test
+	public void givenMultipleContacts_WhenAddedToDB_ShouldBeInSyncWithDB() {
+		Map<TYPE[], Contact> contacts = new HashMap<TYPE[], Contact>();
+		Contact contact1 = new Contact(0,"Suchi", "Maheshwari", "Shahibaug", "Ahmedabad", "Gujarat",
+					"suchi.maheshwari@gmail.com", 326845L, 9967290817L, LocalDate.now());
+		Contact contact2 = new Contact(0,"Vedant", "Dave", "Matunga Road", "Nashik", "Maharashtra",
+				"vedant.dave@gmail.com", 268486L, 9967290813L, LocalDate.now());
+		Contact contact3 = new Contact(0,"Varun", "Poddar", "Bhagat Singh Road", "Patna", "Bihar",
+				"varun.poddar@gmail.com", 867856L, 9967786814L, LocalDate.now());
+		contacts.put(new TYPE[]{TYPE.FRIEND, TYPE.FAMILY}, contact1);
+		contacts.put(new TYPE[]{TYPE.FRIEND, TYPE.PROFESSION}, contact2);
+		contacts.put(new TYPE[]{TYPE.PROFESSION}, contact3);
+		AddressBookService addressBookService = new AddressBookService();
+		addressBookService.readAddressBook();
+		Instant start = Instant.now();
+		boolean result = addressBookService.addContactToDB(contacts);
+		Instant end = Instant.now();
+		System.out.println("Duration for complete execution: " + Duration.between(start, end));
 		assertTrue(result);
 	}
 }

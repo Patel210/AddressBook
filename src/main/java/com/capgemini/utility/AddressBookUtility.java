@@ -32,7 +32,7 @@ public class AddressBookUtility {
 			case 2:
 				System.out.println("Enter the address book name for entering the contact: ");
 				Contact contact = addressBookService.createContact();
-				addressBookService.addContactToParticularAddressBook(sc.next(), contact);
+				addressBookService.addContactToParticularAddressBook(sc.next(), contact, IOTYPE.CONSOLE);
 				break;
 			case 3:
 				System.out.println("Enter the address book name for viewing: ");

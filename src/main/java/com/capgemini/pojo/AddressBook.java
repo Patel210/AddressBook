@@ -4,12 +4,12 @@ import java.util.LinkedList;
 
 public class AddressBook {
 	private int id;
-	private String name;
+	public String name;
 	public TYPE type;
 	private LinkedList<Contact> contacts;
 
 	public enum TYPE {
-		FRIEND, FAMILY, PROFESSION, CULTURAL;
+		FRIEND, FAMILY, PROFESSION;
 	}
 
 	public AddressBook(int id, String name, TYPE type) {

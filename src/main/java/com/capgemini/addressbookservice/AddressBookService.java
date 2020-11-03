@@ -30,16 +30,20 @@ interface AddKVpair {
 public class AddressBookService {
 
 	public enum IOTYPE {
-		CONSOLE, TXT_FILE, CSV_FILE, JSON_FILE, DB_IO;
+		CONSOLE, TXT_FILE, CSV_FILE, JSON_FILE, DB_IO, REST_IO;
 	}
 
-	private static Map<String, List<Contact>> addressBooks = new HashMap<String, List<Contact>>();
-	private static Map<TYPE, AddressBook> addressBooksDB = null;
+	private static Map<String, List<Contact>> addressBooksContactsMap = new HashMap<String, List<Contact>>();
+	private static Map<String, AddressBook> addressBooks = null;
 	private static AddressBookDBService addressBookDBService = new AddressBookDBService();
 	private static final Scanner SC = new Scanner(System.in);
 
 	public AddressBookService() {
 		
+	}
+	
+	public AddressBookService(Map<String, AddressBook> addressBooks) {
+		this.addressBooks = addressBooks;
 	}
 
 	/**
@@ -47,7 +51,7 @@ public class AddressBookService {
 	 */
 	public void addAddressBook(String addressBookName) {
 		List<Contact> addressBook = new LinkedList<Contact>();
-		addressBooks.put(addressBookName, addressBook);
+		addressBooksContactsMap.put(addressBookName, addressBook);
 		System.out.println("Address Book added Successfully!");
 	}
 
@@ -55,7 +59,7 @@ public class AddressBookService {
 	 * To check if Address book by particular name exists or not
 	 */
 	public boolean isAddressBookByThatNameExists(String addressBookName) {
-		int count = (int) addressBooks.entrySet().stream().filter(a -> a.getKey().equalsIgnoreCase(addressBookName))
+		int count = (int) addressBooksContactsMap.entrySet().stream().filter(a -> a.getKey().equalsIgnoreCase(addressBookName))
 				.count();
 		return (count == 1) ? true : false;
 	}
@@ -63,13 +67,17 @@ public class AddressBookService {
 	/**
 	 * To add contact in particular address book
 	 */
-	public void addContactToParticularAddressBook(String addressBookName, Contact contact) {
+	public void addContactToParticularAddressBook(String addressBookName, Contact contact, IOTYPE ioType) {
+		if(ioType.equals(IOTYPE.REST_IO)) {
+			addressBooks.get(addressBookName).getContacts().add(contact);
+			return;
+		}
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
 		Predicate<Contact> predicate = contactObj -> contactObj.equals(contact);
 		if (isAddressBookByThatNameExists) {
-			boolean isSame = addressBooks.get(addressBookName).stream().anyMatch(predicate);
+			boolean isSame = addressBooksContactsMap.get(addressBookName).stream().anyMatch(predicate);
 			if (!isSame) {
-				addressBooks.get(addressBookName).add(contact);
+				addressBooksContactsMap.get(addressBookName).add(contact);
 				System.out.println("Contact added successfully!");
 			} else {
 				System.out.println("Contact by that name already exists in the particular address book! Try again!");
@@ -80,7 +88,7 @@ public class AddressBookService {
 			String option = SC.next();
 			if (option.equalsIgnoreCase("y")) {
 				addAddressBook(addressBookName);
-				addressBooks.get(addressBookName).add(contact);
+				addressBooksContactsMap.get(addressBookName).add(contact);
 			}
 		}
 	}
@@ -116,7 +124,7 @@ public class AddressBookService {
 	 */
 	public Contact getContact(String firstName, String lastName) {
 		Contact contact = null;
-		for (Map.Entry<String, List<Contact>> entry : addressBooks.entrySet()) {
+		for (Map.Entry<String, List<Contact>> entry : addressBooksContactsMap.entrySet()) {
 			for (Contact contactObject : entry.getValue()) {
 				if (contactObject.getFirstName().equalsIgnoreCase(firstName)
 						&& contactObject.getLastName().equalsIgnoreCase(lastName)) {
@@ -165,7 +173,7 @@ public class AddressBookService {
 	 */
 	public void removeContact(String firstName, String lastName) {
 		boolean flag = false;
-		for (Map.Entry<String, List<Contact>> entry : addressBooks.entrySet()) {
+		for (Map.Entry<String, List<Contact>> entry : addressBooksContactsMap.entrySet()) {
 			for (Contact contactObject : entry.getValue()) {
 				if (contactObject.getFirstName().equalsIgnoreCase(firstName)
 						&& contactObject.getLastName().equalsIgnoreCase(lastName)) {
@@ -183,10 +191,10 @@ public class AddressBookService {
 
 	public void viewAddressBook(String addressBookName) {
 		if (isAddressBookByThatNameExists(addressBookName)) {
-			if (addressBooks.get(addressBookName).size() == 0) {
+			if (addressBooksContactsMap.get(addressBookName).size() == 0) {
 				System.out.println("Sorry! No contact present in this address Book");
 			} else {
-				addressBooks.get(addressBookName).forEach(System.out::println);
+				addressBooksContactsMap.get(addressBookName).forEach(System.out::println);
 			}
 		} else {
 			System.out.println("Sorry! No address book by this name present in the system");
@@ -197,7 +205,7 @@ public class AddressBookService {
 	 * To get the list of contacts in particular state
 	 */
 	public List<Contact> listOfContactsInParticularState(String state) {
-		LinkedList<Contact> contactInParticularState = (LinkedList<Contact>) addressBooks.entrySet().stream()
+		LinkedList<Contact> contactInParticularState = (LinkedList<Contact>) addressBooksContactsMap.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getState().equals(state))
 				.collect(Collectors.toCollection(LinkedList::new));
 		if (contactInParticularState.size() == 0) {
@@ -210,7 +218,7 @@ public class AddressBookService {
 	 * To get the list of contacts in particular city
 	 */
 	public List<Contact> listOfContactsInParticularCity(String city) {
-		LinkedList<Contact> contactInParticularCity = (LinkedList<Contact>) addressBooks.entrySet().stream()
+		LinkedList<Contact> contactInParticularCity = (LinkedList<Contact>) addressBooksContactsMap.entrySet().stream()
 				.flatMap(entry -> entry.getValue().stream()).filter(contact -> contact.getCity().equals(city))
 				.collect(Collectors.toCollection(LinkedList::new));
 		if (contactInParticularCity.size() == 0) {
@@ -246,7 +254,7 @@ public class AddressBookService {
 	 * To get the list of city based on all contacts in tha address books
 	 */
 	public List<String> listOfAllCities() {
-		List<String> cities = addressBooks.entrySet().stream().flatMap(entry -> entry.getValue().stream())
+		List<String> cities = addressBooksContactsMap.entrySet().stream().flatMap(entry -> entry.getValue().stream())
 				.map(contact -> contact.getCity()).collect(Collectors.toList());
 		return cities;
 	}
@@ -255,7 +263,7 @@ public class AddressBookService {
 	 * To get the list of state based on all contacts in tha address books
 	 */
 	public List<String> listOfAllStates() {
-		List<String> states = addressBooks.entrySet().stream().flatMap(entry -> entry.getValue().stream())
+		List<String> states = addressBooksContactsMap.entrySet().stream().flatMap(entry -> entry.getValue().stream())
 				.map(contact -> contact.getState()).collect(Collectors.toList());
 		return states;
 	}
@@ -307,16 +315,16 @@ public class AddressBookService {
 	private void sortAddressBook(String addressBookName, Comparator<Contact> comparator) {
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBookName);
 		if (isAddressBookByThatNameExists) {
-			if (addressBooks.get(addressBookName).size() == 0) {
+			if (addressBooksContactsMap.get(addressBookName).size() == 0) {
 				System.out.println("Sorry! There is no contact in this address book to sort!");
 			} else {
-				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBookName)
+				LinkedList<Contact> sortedAddressBook = addressBooksContactsMap.get(addressBookName)
 																	.stream()
 																	.sorted(comparator)
 																	.collect(Collectors.toCollection(LinkedList::new));
 
-				addressBooks.replace(addressBookName, sortedAddressBook);
-				System.out.println(addressBooks.get(addressBookName));
+				addressBooksContactsMap.replace(addressBookName, sortedAddressBook);
+				System.out.println(addressBooksContactsMap.get(addressBookName));
 			}
 		} else {
 			System.out.println("There is no address book by this name in the address books");
@@ -329,15 +337,15 @@ public class AddressBookService {
 	public void sortAddressBookByZip(String addressBook) {
 		boolean isAddressBookByThatNameExists = isAddressBookByThatNameExists(addressBook);
 		if (isAddressBookByThatNameExists) {
-			if (addressBooks.get(addressBook).size() == 0) {
+			if (addressBooksContactsMap.get(addressBook).size() == 0) {
 				System.out.println("Sorry! There is no contact in this address book to sort!");
 			} else {
-				LinkedList<Contact> sortedAddressBook = addressBooks.get(addressBook).stream()
+				LinkedList<Contact> sortedAddressBook = addressBooksContactsMap.get(addressBook).stream()
 						.sorted(Comparator.comparing(Contact::getZip))
 						.collect(Collectors.toCollection(LinkedList::new));
 
-				addressBooks.replace(addressBook, sortedAddressBook);
-				System.out.println(addressBooks.get(addressBook));
+				addressBooksContactsMap.replace(addressBook, sortedAddressBook);
+				System.out.println(addressBooksContactsMap.get(addressBook));
 			}
 		} else {
 			System.out.println("There is no address book by this name in the address books");
@@ -351,23 +359,23 @@ public class AddressBookService {
 		if (isAddressBookByThatNameExists(addressBookName)) {
 			if (ioType.equals(IOTYPE.TXT_FILE)) {
 				new AddressBookFileIO().writeTextFile(addressBookName,
-						(LinkedList<Contact>) addressBooks.get(addressBookName));
+						(LinkedList<Contact>) addressBooksContactsMap.get(addressBookName));
 			} else if (ioType.equals(IOTYPE.CSV_FILE)) {
 				try {
 					new AddressBookFileIO().writeCSVFile(addressBookName,
-							(LinkedList<Contact>) addressBooks.get(addressBookName));
+							(LinkedList<Contact>) addressBooksContactsMap.get(addressBookName));
 				} catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
 					e.printStackTrace();
 				}
 			} else if (ioType.equals(IOTYPE.JSON_FILE)) {
 				try {
 					new AddressBookFileIO().writeJSONFile(addressBookName,
-							(LinkedList<Contact>) addressBooks.get(addressBookName));
+							(LinkedList<Contact>) addressBooksContactsMap.get(addressBookName));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			} else {
-				addressBooks.get(addressBookName).forEach(System.out::println);
+				addressBooksContactsMap.get(addressBookName).forEach(System.out::println);
 			}
 		} else {
 			System.out.println("Please enter the correct address book name!");
@@ -378,14 +386,14 @@ public class AddressBookService {
 	 * Add contact to address book Database
 	 */
 	public int addContactToDB(String firstName, String lastName, String address, String city, String state,
-			String email, long zip, long phoneNumber, LocalDate date, TYPE... types) {
+			String email, long zip, long phoneNumber, LocalDate date, String... bookNames) {
 		
 		try {
 			Contact contact = addressBookDBService.addContactToDB(firstName, lastName, address, city,
-																  state, email, zip, phoneNumber, date, types);
+																  state, email, zip, phoneNumber, date, bookNames);
 			if (contact != null) {
-				for (TYPE type : types) {
-					addressBooksDB.get(type).getContacts().add(contact);
+				for (String name : bookNames) {
+					getAddressBooks().get(name).getContacts().add(contact);
 				}
 			}
 			return contact.getId();
@@ -398,7 +406,7 @@ public class AddressBookService {
 	/**
 	 * Add multiple contacts to address book Database
 	 */
-	public boolean addContactToDB(Map<TYPE[], Contact> contacts) {
+	public boolean addContactToDB(Map<String[], Contact> contacts) {
 		Map<Integer, Boolean> contactInsertionStatus = new HashMap<Integer, Boolean>();
 		Map<Integer, Boolean> contactSyncStatus = new HashMap<Integer, Boolean>();
 		contacts.entrySet().forEach(entry -> {
@@ -448,9 +456,9 @@ public class AddressBookService {
 
 		if (!isAddressBookByThatNameExists(addressBookName)) {
 			addAddressBook(addressBookName);
-			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact));
+			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact, ioType));
 		} else {
-			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact));
+			contactList.forEach(contact -> addContactToParticularAddressBook(addressBookName, contact, ioType));
 		}
 	}
 
@@ -499,8 +507,8 @@ public class AddressBookService {
 	 */
 	public int readAddressBook() {
 		try {
-			addressBooksDB = addressBookDBService.readAddressBook();
-			return getContactCount(addressBooksDB);
+			addressBooks = addressBookDBService.readAddressBook();
+			return getContactCount();
 		} catch (DatabaseException e) {
 			System.out.println(e.getMessage());
 		}
@@ -514,7 +522,7 @@ public class AddressBookService {
 		try {
 			int rowAffected = addressBookDBService.updateContactPhoneNumber(contactId, phoneNumber);
 			if(rowAffected == 1) {
-				addressBooksDB.entrySet().forEach(entry -> entry.getValue().getContacts().stream().forEach(contact->  
+				getAddressBooks().entrySet().forEach(entry -> entry.getValue().getContacts().stream().forEach(contact->  
 												{ if (contact.getId() == contactId) contact.setPhoneNumber(phoneNumber);}));
 			}
 		} catch (DatabaseException e) {
@@ -526,33 +534,31 @@ public class AddressBookService {
 	 * Checks whether a contact is in sync with DB
 	 */
 	public boolean isContactInSyncWithDB(int contactId) {
+		boolean flag = false;
 		try {
 			Contact updatedContact = addressBookDBService.getContact(contactId);
-			for (Map.Entry<TYPE, AddressBook> entry : addressBooksDB.entrySet()) {
-				boolean flag = entry.getValue()
-									.getContacts()
-									.stream()
-									.filter(contact -> contact.getId() == contactId)
-									.allMatch(contact -> contact.equals(updatedContact));
-				if(flag == false) {
-					return false;
-				}
+			for (Map.Entry<String, AddressBook> entry : getAddressBooks().entrySet()) {
+				flag = entry.getValue().getContacts().stream().filter(contact -> contact.getId() == contactId)
+						.allMatch(contact -> contact.equals(updatedContact));
 			}
-			return true;
 		} catch (DatabaseException e) {
 			System.out.println(e.getMessage());
 		}
-		return false;
+		return flag;
 	}
 
 	/**
 	 * returns the contact count in all address books
 	 */
-	private int getContactCount(Map<TYPE, AddressBook> addressBooks) {
+	public int getContactCount() {
 		int count = 0;
-		for(Map.Entry<TYPE, AddressBook> entry : addressBooks.entrySet()) {
+		for(Map.Entry<String, AddressBook> entry : addressBooks.entrySet()) {
 			count += entry.getValue().getContacts().size();
 		}
 		return count;
+	}
+
+	public static Map<String, AddressBook> getAddressBooks() {
+		return addressBooks;
 	}
 }

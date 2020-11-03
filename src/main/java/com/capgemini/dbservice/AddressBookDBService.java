@@ -24,7 +24,7 @@ public class AddressBookDBService {
 	/**
 	 * Reads address Book from DB
 	 */
-	public Map<AddressBook.TYPE, AddressBook> readAddressBook() throws DatabaseException {
+	public Map<String, AddressBook> readAddressBook() throws DatabaseException {
 		String query = "SELECT * FROM address_book";
 		LinkedList<AddressBook> addressBooks = getAddressBooks(query);
 		addressBooks.forEach(addressBook -> {
@@ -34,8 +34,8 @@ public class AddressBookDBService {
 				System.out.println(e.getMessage());
 			}
 		});
-		Map<TYPE, AddressBook> addressBookMap = new HashMap<AddressBook.TYPE, AddressBook>();
-		addressBooks.forEach(addressBook -> addressBookMap.put(addressBook.type, addressBook));
+		Map<String, AddressBook> addressBookMap = new HashMap<String, AddressBook>();
+		addressBooks.forEach(addressBook -> addressBookMap.put(addressBook.name, addressBook));
 		return addressBookMap;
 	}
 	
@@ -102,7 +102,7 @@ public class AddressBookDBService {
 	 * Add contact to the Database (All involved tables gets an addition)
 	 */
 	public Contact addContactToDB(String firstName, String lastName, String address, String city, String state,
-			String email, long zip, long phoneNumber, LocalDate date, TYPE[] types) throws DatabaseException {
+			String email, long zip, long phoneNumber, LocalDate date, String[] bookNames) throws DatabaseException {
 		
 		Connection[] connection = {null};
 		int[] contactId = {-1};
@@ -137,7 +137,7 @@ public class AddressBookDBService {
 					@Override
 					public void run() {
 						try {
-							completionStatus[1] = addToContactAddressBookTable(connection[0], contactId[0], types);
+							completionStatus[1] = addToContactAddressBookTable(connection[0], contactId[0], bookNames);
 						} catch (DatabaseException e) {
 							System.out.println(e.getMessage());
 						}
@@ -175,11 +175,11 @@ public class AddressBookDBService {
 	/**
 	 * add contact to address_book_contact table
 	 */
-	private boolean addToContactAddressBookTable(Connection connection, int contactId, TYPE[] types) throws DatabaseException {
+	private boolean addToContactAddressBookTable(Connection connection, int contactId, String[] bookNames) throws DatabaseException {
 		boolean flag = true;
 		try(Statement statement = connection.createStatement();){
-			for(TYPE type : types) {
-				int addressBookId = getAddressBookId(connection, type);
+			for(String bookName : bookNames) {
+				int addressBookId = getAddressBookId(connection, bookName);
 				if(addressBookId != -1) {
 					String query = String.format("insert into address_book_contact (contact_id, book_id) "
 							+ "Values ('%s','%s')", contactId, addressBookId);
@@ -203,11 +203,11 @@ public class AddressBookDBService {
 	/**
 	 * Return address book Id for a given type
 	 */
-	private int getAddressBookId(Connection connection, TYPE type) throws DatabaseException {
+	private int getAddressBookId(Connection connection, String bookName) throws DatabaseException {
 		int bookId = -1;
-		String query = "Select book_id from address_book where type = ?";
+		String query = "Select book_id from address_book where name = ?";
 		try(PreparedStatement statement = connection.prepareStatement(query);) {
-			statement.setString(1, type.toString());
+			statement.setString(1, bookName);
 			ResultSet result = statement.executeQuery();
 			while(result.next()) bookId = result.getInt("book_id");
 			return bookId;
